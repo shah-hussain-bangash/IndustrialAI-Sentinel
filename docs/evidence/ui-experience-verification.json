@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-20",
+  "frontend_build": "passed; TypeScript and Vite",
+  "ui_workflow_tests": 5,
+  "backend_tests": 172,
+  "browser_walkthrough": [
+    "Admin sign-in and operations overview",
+    "Settings section navigation and gateway form",
+    "New isolated credential sends 4 events in browser with 0 duplicates",
+    "Explicit review enables publication; gateway snapshot published",
+    "Post-publication state disables duplicate publication without stale ready message",
+    "Phone width 390x844: registry and settings usable; viewport reset afterward"
+  ],
+  "installer": "passed: install and repeat on populated source fixture; database/backend/git markers unchanged; local source edits rejected before writes",
+  "scope": "local frontend update; no schema/backend/runtime-data/Git-history modifications",
+  "live_application": "not modified; incremental update supplied"
+}

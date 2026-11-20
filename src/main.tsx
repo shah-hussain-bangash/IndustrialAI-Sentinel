@@ -11,6 +11,7 @@ import "@fontsource/manrope/700.css";
 import "@fontsource/manrope/800.css";
 import "./styles.css";
 import "./professional.css";
+import "./experience.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

@@ -3,11 +3,11 @@ import { Box, Loader2, Waves, X, type LucideIcon } from "lucide-react";
 import { date, human, type Reading } from "../api";
 
 export const colors = {
-  teal: "#3478df",
+  teal: "#2f7d5b",
   lime: "#50b89b",
   amber: "#dfad52",
   red: "#d67e8d",
-  blue: "#879bca",
+  blue: "#132849",
 };
 export function initials(name: string) {
   return name
@@ -389,58 +389,29 @@ export function EquipmentArt({
   kind?: string;
   size?: string;
 }) {
+  const type = kind.toLowerCase();
+  const image = type.includes("compressor")
+    ? "compressor-room"
+    : type.includes("motor") || type.includes("turbine")
+      ? "process-machinery"
+      : "pump-installation";
+  const description =
+    image === "compressor-room"
+      ? "Industrial compressor installation"
+      : image === "process-machinery"
+        ? "Process machinery and pipework"
+        : "Industrial pumps and electric motors";
   return (
-    <svg
-      className={`equipment-art ${size}`}
-      viewBox="0 0 240 140"
-      role="img"
-      aria-label={`${kind} equipment schematic`}
+    <figure
+      className={`equipment-art equipment-photograph ${size} photo-${image}`}
     >
-      <defs>
-        <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
-          <stop stopColor="#d2deee" />
-          <stop offset="1" stopColor="#a8b4c4" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="125" cy="119" rx="90" ry="10" fill="#cfdbeb" opacity=".55" />
-      <path d="M28 108 182 108 216 122 62 122Z" fill="#b5c1d1" />
-      <path d="M28 108v7l34 14v-7m154 0v7L62 129" fill="#9ba7b7" />
-      {kind === "Motor" || kind === "Turbine" ? (
-        <g>
-          <path d="M62 52 122 33 180 54v46l-60 20-58-22Z" fill="url(#metal)" />
-          <ellipse cx="168" cy="76" rx="25" ry="28" fill="#8591a1" />
-          <ellipse cx="168" cy="76" rx="13" ry="16" fill="#d0dcec" />
-          <path
-            d="m75 54 0 39m11-43v46m12-50v48m12-52v48"
-            stroke="#8c98a8"
-            strokeWidth="3"
-          />
-          <path d="m180 72 34-4v10l-34 5" fill="#8591a1" />
-        </g>
-      ) : (
-        <g>
-          <path d="m58 88 64-20 40 16-63 22Z" fill="#94a0b0" />
-          <path d="M54 60 92 45l36 14v34L91 107 54 92Z" fill="url(#metal)" />
-          <ellipse cx="124" cy="75" rx="21" ry="25" fill="#a3afbf" />
-          <ellipse cx="124" cy="75" rx="10" ry="13" fill="#6d7989" />
-          <path
-            d="m70 59 0 29m10-33v37m10-41v43"
-            stroke="#95a1b1"
-            strokeWidth="3"
-          />
-          <path d="m145 75 24-7v14l-24 7" fill="#8793a3" />
-          <ellipse cx="178" cy="78" rx="26" ry="27" fill="#8b97a7" />
-          <ellipse cx="178" cy="78" rx="19" ry="20" fill="#bdc9d9" />
-          <ellipse cx="178" cy="78" rx="7" ry="9" fill="#7e8a9a" />
-          <path d="M172 57V31l17-5 10 5v24" fill="#a0acbc" />
-          <ellipse cx="185" cy="29" rx="14" ry="6" fill="#7c8898" />
-          <path d="M185 79h28v14h-28" fill="#adb9c9" />
-          <ellipse cx="213" cy="86" rx="7" ry="11" fill="#8591a1" />
-        </g>
-      )}
-      <path d="m58 100 0 12m110-12v13" stroke="#7e8a9a" strokeWidth="7" />
-      <circle cx="46" cy="113" r="2" fill="#677383" />
-      <circle cx="186" cy="118" r="2" fill="#677383" />
-    </svg>
+      <img
+        src={`/assets/photos/${image}.jpg`}
+        alt={`${description}; illustrative stock photograph`}
+        loading="lazy"
+        decoding="async"
+      />
+      <figcaption>Illustrative photograph</figcaption>
+    </figure>
   );
 }

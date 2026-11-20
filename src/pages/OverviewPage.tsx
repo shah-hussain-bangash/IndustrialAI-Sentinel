@@ -12,6 +12,7 @@ import {
   Thermometer,
   TriangleAlert,
   Waves,
+  Radio,
 } from "lucide-react";
 import { age, human } from "../api";
 
@@ -99,30 +100,85 @@ export function OverviewPage({
   let offset = 0;
   return (
     <>
-      <section className="operations-brief" aria-label="Operations brief">
-        <div className="brief-icon">
-          <Waves size={24} />
-        </div>
+      <section
+        className="operations-brief photo-brief"
+        aria-label="Operations brief"
+      >
+        <img
+          className="brief-photograph"
+          src="/assets/photos/refinery-modern.jpg"
+          alt=""
+          fetchPriority="high"
+        />
         <div className="brief-copy">
-          <span className="brief-eyebrow">WORKSPACE PULSE</span>
+          <span className="brief-eyebrow">
+            INDUSTRIAL INTELLIGENCE / ENERGY OPERATIONS
+          </span>
           <h2>
-            {unknownAssets
-              ? "Bring your equipment into focus."
-              : "Your next decision starts with a clearer view."}
+            A clearer view.
+            <br />
+            <em>A more confident next step.</em>
           </h2>
           <p>
-            {unknownAssets
-              ? `${unknownAssets} assets await fresh readings. Run a demo replay in Live monitoring.`
-              : `${activeEpisodes} active condition episodes · ${stats.pending_reviews} recommendations awaiting review.`}
+            Bring your equipment, signals and maintenance decisions into one
+            connected workspace.
+          </p>
+          <div className="brief-actions">
+            <Button onClick={() => navigate("monitor")}>
+              Explore live monitoring
+            </Button>
+            <button
+              className="brief-secondary"
+              onClick={() => navigate("assets")}
+            >
+              View equipment
+            </button>
+          </div>
+          <div className="brief-live-summary">
+            <span>
+              <strong>{stats.assets}</strong> assets in scope
+            </span>
+            <span>
+              <strong>{activeEpisodes}</strong> active episodes
+            </span>
+            <span>
+              <strong>{stats.pending_reviews}</strong> awaiting review
+            </span>
+          </div>
+        </div>
+        <div className="brief-photo-caption">
+          Energy infrastructure · Illustrative photograph
+        </div>
+        {unknownAssets > 0 && (
+          <div className="brief-freshness">
+            {unknownAssets} assets await fresh readings
+          </div>
+        )}
+      </section>
+      <section
+        className="production-dashboard-entry"
+        aria-label="Production platform design"
+      >
+        <span className="production-dashboard-icon">
+          <ShieldCheck size={26} />
+        </span>
+        <div>
+          <span className="production-eyebrow">
+            PRODUCTION PLATFORM / UI PREPARATION
+          </span>
+          <h2>Design the complete operating journey.</h2>
+          <p>
+            18 product modules · 10 development phases · Clear launch
+            requirements
           </p>
         </div>
-        <Button onClick={() => navigate("monitor")} icon={ArrowUpRight}>
-          Open monitoring
+        <Button onClick={() => navigate("production")}>
+          Explore platform modules
         </Button>
       </section>
       <div className="stats-grid">
         {statsList.map((s) => (
-          <div className="stat-card" key={s.label}>
+          <div className={`stat-card stat-${s.tone}`} key={s.label}>
             <div className="stat-top">
               <span>{s.label}</span>
               <div className={`stat-icon ${s.tone}`}>
@@ -140,6 +196,34 @@ export function OverviewPage({
           </div>
         ))}
       </div>
+      <section className="workspace-shortcuts" aria-label="Workspace shortcuts">
+        <button onClick={() => navigate("sensors")}>
+          <Radio size={21} />
+          <span>
+            <strong>Inspect sensor data</strong>
+            <small>Channels, events and reviewed publication</small>
+          </span>
+          <ChevronRight size={18} />
+        </button>
+        <button onClick={() => navigate("intelligence")}>
+          <Sparkles size={21} />
+          <span>
+            <strong>Review investigations</strong>
+            <small>
+              {stats.pending_reviews} recommendations awaiting review
+            </small>
+          </span>
+          <ChevronRight size={18} />
+        </button>
+        <button onClick={() => navigate("orders")}>
+          <ClipboardCheck size={21} />
+          <span>
+            <strong>Manage work orders</strong>
+            <small>{stats.open_orders} open maintenance orders</small>
+          </span>
+          <ChevronRight size={18} />
+        </button>
+      </section>
       <div className="overview-main-grid">
         <section className="panel trend-panel">
           <div className="panel-header">
@@ -276,7 +360,7 @@ export function OverviewPage({
       <div className="asset-cards">
         {priority.map((a) => (
           <button
-            className="asset-card"
+            className="asset-card photo-equipment-card"
             key={a.id}
             onClick={() => openAsset(a.id)}
           >

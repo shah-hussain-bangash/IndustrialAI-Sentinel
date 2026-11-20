@@ -48,6 +48,9 @@ import {
 import { initials, Badge, Button, Spinner, Modal } from "./components/ui";
 import { LoginScreen, LoginChoices } from "./components/Login";
 import type { Data, Page } from "./types";
+import { headerImages } from "./lib/headerImages";
+import { OrganizationPage } from "./pages/OrganizationPage";
+import { ProductionPage } from "./pages/ProductionPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { AssetsPage } from "./pages/AssetsPage";
 import { MonitorPage } from "./pages/MonitorPage";
@@ -106,6 +109,12 @@ const pages: { id: Page; label: string; icon: LucideIcon; group: string }[] = [
     group: "OPERATIONS",
   },
   {
+    id: "organization",
+    label: "Organization & sites",
+    icon: Box,
+    group: "OPERATIONS",
+  },
+  {
     id: "activity",
     label: "Activity & audit",
     icon: GitBranch,
@@ -117,20 +126,31 @@ const pages: { id: Page; label: string; icon: LucideIcon; group: string }[] = [
     icon: Settings2,
     group: "OPERATIONS",
   },
+  {
+    id: "production",
+    label: "Production workspace",
+    icon: ShieldCheck,
+    group: "PRODUCT DESIGN",
+  },
 ];
 const titles: Record<Page, string> = {
+  organization: "Organization & sites",
+  production: "Production workspace",
   overview: "Operations overview",
-  assets: "Your equipment, connected.",
+  assets: "Asset registry",
   monitor: "Live sensor monitoring",
-  sensors: "Signals with identity.",
-  intelligence: "Investigate with evidence.",
+  sensors: "Sensor registry",
+  intelligence: "AI investigations",
   knowledge: "Industrial knowledge base",
-  reliability: "Reliability, explored.",
-  orders: "Maintenance, in motion.",
-  activity: "Every action, accounted for.",
+  reliability: "Reliability lab",
+  orders: "Work orders",
+  activity: "Activity & audit",
   settings: "Workspace settings",
 };
 const descriptions: Record<Page, string> = {
+  organization: "Manage your company profile, sites and equipment hierarchy.",
+  production:
+    "Explore platform modules, review workflows and prepare the path to a production pilot.",
   overview: "A clear view of equipment condition. A confident next step.",
   assets:
     "Explore equipment condition, operating history and maintenance context.",
@@ -155,7 +175,10 @@ const descriptions: Record<Page, string> = {
 export default function App() {
   const [user, setUser] = useState<User | null>(null),
     [authReady, setAuthReady] = useState(false);
-  const [page, setPage] = useState<Page>("overview"),
+  const [page, setPage] = useState<Page>(() => {
+      const id = window.location.hash.slice(1).split("/")[0];
+      return pages.find((p) => p.id === id)?.id || "overview";
+    }),
     [site, setSite] = useState(""),
     [search, setSearch] = useState("");
   const [data, setData] = useState<Data | null>(null),
@@ -310,7 +333,20 @@ export default function App() {
     }, 5000);
     return () => clearInterval(timer);
   }, [live, scenario, user, refresh, notify]);
+  useEffect(() => {
+    const changed = () => {
+      const id = window.location.hash.slice(1).split("/")[0];
+      const destination = pages.find((p) => p.id === id);
+      if (destination) {
+        setPage(destination.id);
+        setMobile(false);
+      }
+    };
+    window.addEventListener("hashchange", changed);
+    return () => window.removeEventListener("hashchange", changed);
+  }, []);
   function navigate(next: Page) {
+    window.location.hash = next;
     setPage(next);
     setMobile(false);
     setSearch("");
@@ -368,6 +404,16 @@ export default function App() {
   const activeOrder = data?.orders.find((o) => o.id === orderId);
   return (
     <div className={`app-shell ${prefs.compact ? "compact" : ""}`}>
+      <a
+        className="skip-link"
+        href="#workspace-content"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("workspace-content")?.focus();
+        }}
+      >
+        Skip to workspace
+      </a>
       {mobile && <div className="nav-shade" onClick={() => setMobile(false)} />}
       <aside className={`sidebar ${mobile ? "open" : ""}`}>
         <a
@@ -468,6 +514,7 @@ export default function App() {
             <span className="breadcrumb">
               Workspace <ChevronRight size={13} />
               <strong>{current.label}</strong>
+              <span className="workspace-environment">Demo workspace</span>
             </span>
           </div>
           <div className="topbar-tools">
@@ -505,6 +552,7 @@ export default function App() {
               )}
             </div>
             <span className="header-divider" />
+            <span className="header-role">{human(user.role)}</span>
             <div className="popover-parent">
               <button
                 className="icon-btn notification-btn"
@@ -578,8 +626,24 @@ export default function App() {
             </div>
           </div>
         </header>
-        <main>
-          <div className="page-heading">
+        <main id="workspace-content" tabIndex={-1}>
+          <div
+            className={`page-heading ${["overview", "monitor", "production"].includes(page) ? "" : "photographic-page-heading"}`}
+          >
+            {!["overview", "monitor", "production"].includes(page) && (
+              <>
+                <img
+                  className="page-heading-photograph"
+                  src={`/assets/photos/${headerImages[page].file}.jpg`}
+                  style={{ objectPosition: headerImages[page].position }}
+                  alt=""
+                  fetchPriority="high"
+                />
+                <span className="page-heading-image-caption">
+                  {headerImages[page].caption} · Illustrative photograph
+                </span>
+              </>
+            )}
             <div>
               <div className="eyebrow">
                 INDUSTRIAL OPERATIONS <span>/</span>
@@ -692,6 +756,16 @@ export default function App() {
             <Spinner />
           ) : (
             <>
+              {page === "organization" && (
+                <OrganizationPage
+                  openAsset={setAssetId}
+                  selectedSite={site}
+                  selectSite={setSite}
+                />
+              )}
+              {page === "production" && (
+                <ProductionPage data={data} navigate={navigate} />
+              )}
               {page === "overview" && (
                 <OverviewPage
                   data={data}

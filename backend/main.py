@@ -49,6 +49,7 @@ from .recovery import create_recovery_router
 from .originals import create_original_router, original_metadata, filename as original_filename
 from .gateways import create_gateway_router
 from fastapi.exceptions import RequestValidationError
+from .foundation import create_foundation_router
 from .sites import create_site_router
 
 
@@ -67,6 +68,8 @@ async def lifespan(app):
         raise RuntimeError("Original document archive schema upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     if existing.has_table("assets") and not existing.has_table("telemetry_gateways"):
         raise RuntimeError("Telemetry gateway schema upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
+    if existing.has_table("assets") and not all(existing.has_table(t) for t in ("organization", "site_areas", "equipment_systems", "equipment_placements")):
+        raise RuntimeError("Organization hierarchy upgrade required. Stop Sentinel and run scripts/upgrade_database.py before restarting.")
     initialize()
     if not inspect(engine).has_table("sites"):
         raise RuntimeError("Site schema is missing. Stop the server and run scripts/upgrade_database.py before restarting.")
@@ -1425,6 +1428,7 @@ app.include_router(create_recovery_router(idempotent, finish))
 app.include_router(create_original_router())
 app.include_router(create_gateway_router(accessible_assets, asset_for, idempotent, finish))
 app.include_router(create_site_router())
+app.include_router(create_foundation_router(idempotent, finish, asset_for))
 
 DIST = Path(__file__).resolve().parents[1] / "dist"
 if DIST.exists():

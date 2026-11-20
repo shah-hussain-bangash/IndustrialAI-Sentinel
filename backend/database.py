@@ -69,6 +69,56 @@ class Site(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class Organization(Base):
+    """Single-company profile. This is deliberately not multi-tenant isolation."""
+    __tablename__ = "organization"
+    __table_args__ = (
+        CheckConstraint("id = 'primary'", name="ck_organization_singleton"),
+        CheckConstraint("length(trim(name)) > 0", name="ck_organization_name"),
+        CheckConstraint("version >= 1 AND configured IN (0,1)", name="ck_organization_version"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default="primary")
+    name: Mapped[str] = mapped_column(String(160), default="Your organization")
+    description: Mapped[str] = mapped_column(String(500), default="")
+    configured: Mapped[int] = mapped_column(Integer, default=0)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
+class SiteArea(Base):
+    __tablename__ = "site_areas"
+    __table_args__ = (
+        UniqueConstraint("site_id", "code", name="uq_area_site_code"),
+        UniqueConstraint("id", "site_id", name="uq_area_site_identity"),
+        CheckConstraint("length(trim(name)) > 0 AND length(trim(code)) > 0", name="ck_area_labels"),
+        CheckConstraint("version >= 1", name="ck_area_version"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    site_id: Mapped[str] = mapped_column(ForeignKey("sites.id"), index=True)
+    code: Mapped[str] = mapped_column(String(30))
+    name: Mapped[str] = mapped_column(String(120))
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
+class EquipmentSystem(Base):
+    __tablename__ = "equipment_systems"
+    __table_args__ = (
+        ForeignKeyConstraint(["area_id", "site_id"], ["site_areas.id", "site_areas.site_id"], name="fk_system_area_site"),
+        UniqueConstraint("area_id", "code", name="uq_system_area_code"),
+        UniqueConstraint("id", "site_id", name="uq_system_site_identity"),
+        CheckConstraint("length(trim(name)) > 0 AND length(trim(code)) > 0", name="ck_system_labels"),
+        CheckConstraint("version >= 1", name="ck_system_version"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    site_id: Mapped[str] = mapped_column(ForeignKey("sites.id"), index=True)
+    area_id: Mapped[str] = mapped_column(String(36), index=True)
+    code: Mapped[str] = mapped_column(String(30))
+    name: Mapped[str] = mapped_column(String(120))
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class User(Base):
     __tablename__ = "users"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
@@ -95,7 +145,7 @@ class LoginSession(Base):
 
 class Asset(Base):
     __tablename__ = "assets"
-    __table_args__ = (UniqueConstraint("site", "tag"), ForeignKeyConstraint(["site_id", "site"], ["sites.id", "sites.name"], name="fk_asset_site_identity"))
+    __table_args__ = (UniqueConstraint("site", "tag"), UniqueConstraint("id", "site_id", name="uq_asset_site_identity"), ForeignKeyConstraint(["site_id", "site"], ["sites.id", "sites.name"], name="fk_asset_site_identity"))
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     tag: Mapped[str] = mapped_column(String(60))
     name: Mapped[str] = mapped_column(String(160))
@@ -108,6 +158,19 @@ class Asset(Base):
     installed: Mapped[str] = mapped_column(String(20), default="2023-06-01")
     version: Mapped[int] = mapped_column(Integer, default=1)
     threshold: Mapped[float] = mapped_column(Float, default=4.5)
+
+
+class EquipmentPlacement(Base):
+    __tablename__ = "equipment_placements"
+    __table_args__ = (
+        ForeignKeyConstraint(["asset_id", "site_id"], ["assets.id", "assets.site_id"], name="fk_placement_asset_site"),
+        ForeignKeyConstraint(["system_id", "site_id"], ["equipment_systems.id", "equipment_systems.site_id"], name="fk_placement_system_site"),
+        CheckConstraint("version >= 1", name="ck_placement_version"),
+    )
+    asset_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    site_id: Mapped[str] = mapped_column(ForeignKey("sites.id"), index=True)
+    system_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
 
 
 class Sensor(Base):

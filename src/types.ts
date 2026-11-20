@@ -18,7 +18,9 @@ export type Page =
   | "reliability"
   | "orders"
   | "activity"
-  | "settings";
+  | "settings"
+  | "production"
+  | "organization";
 export interface Data {
   overview: Overview;
   assets: Asset[];

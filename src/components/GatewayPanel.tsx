@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, date } from "../api";
 import { Button, Empty, Spinner } from "./ui";
+import { CheckCircle2, Copy, KeyRound, Radio, ShieldCheck } from "lucide-react";
+import { sampleRecords } from "../lib/gatewaySample";
 
 interface Gateway {
   id: string;
@@ -39,6 +41,11 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
   const [credential, setCredential] = useState(""),
     [reveal, setReveal] = useState(false),
     [issuedName, setIssuedName] = useState("");
+  const [sampleBusy, setSampleBusy] = useState(false),
+    [sampleDone, setSampleDone] = useState(false);
+  const sampleAttempt = useRef<{ key: string; body: string } | null>(null);
+  const credentialInput = useRef<HTMLInputElement>(null);
+  const locked = busy || sampleBusy;
   const attempt = useRef<{ key: string; path: string; body: string } | null>(
     null,
   );
@@ -64,11 +71,13 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
     };
   }, [isAdmin, reload]);
   async function request(path: string, body: unknown) {
-    if (busy) return;
+    if (locked) return;
     setBusy(true);
     setError("");
     setNotice("");
     setCredential("");
+    setSampleDone(false);
+    sampleAttempt.current = null;
     setReveal(false);
     try {
       const encoded = JSON.stringify(body);
@@ -105,9 +114,88 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
   async function copy() {
     try {
       await navigator.clipboard.writeText(credential);
-      setNotice("Credential copied. It is not stored by this interface.");
+      setNotice(
+        `Copied gateway key (${credential.length} characters). Paste it directly into the sender without copying another command.`,
+      );
     } catch {
-      setNotice("Copy unavailable. Use Show credential and copy it manually.");
+      setReveal(true);
+      credentialInput.current?.focus();
+      credentialInput.current?.select();
+      setError(
+        "Clipboard access was unavailable. The key is selected: press Ctrl+C, then paste directly into the sender. Or use Send test sample below.",
+      );
+    }
+  }
+  async function sendSample() {
+    if (locked || !credential || sampleDone) return;
+    setSampleBusy(true);
+    setError("");
+    setNotice("");
+    async function gatewayRequest<T>(
+      path: string,
+      body?: string,
+      key?: string,
+    ): Promise<T> {
+      const response = await fetch(`/api${path}`, {
+        method: body ? "POST" : "GET",
+        credentials: "omit",
+        redirect: "error",
+        signal: AbortSignal.timeout(20000),
+        headers: {
+          Authorization: `Bearer ${credential}`,
+          ...(body
+            ? { "Content-Type": "application/json", "Idempotency-Key": key! }
+            : {}),
+        },
+        body,
+      });
+      if (!response.ok)
+        throw new Error(
+          response.status === 401
+            ? "This gateway key is expired or no longer active. Rotate its credential and try again."
+            : `Gateway rejected this sample (HTTP ${response.status}). Check its scope and refresh before retrying.`,
+        );
+      return response.json() as Promise<T>;
+    }
+    try {
+      if (!sampleAttempt.current) {
+        const identity = await gatewayRequest<{
+          sensors: { id: string; channel: string; unit: string }[];
+        }>("/gateway-identity");
+        const key = crypto.randomUUID();
+        sampleAttempt.current = {
+          key,
+          body: JSON.stringify({
+            records: sampleRecords(
+              identity.sensors,
+              key,
+              Date.now() / 1000 - 1,
+            ),
+          }),
+        };
+      }
+      const result = await gatewayRequest<{
+        inserted: number;
+        duplicates: number;
+      }>(
+        "/gateway-events/batches",
+        sampleAttempt.current.body,
+        sampleAttempt.current.key,
+      );
+      setSampleDone(true);
+      sampleAttempt.current = null;
+      setNotice(
+        `Gateway sample accepted: ${result.inserted} saved, ${result.duplicates} duplicates. Open Sensor registry to review the four readings and publish while fresh.`,
+      );
+      setReload((value) => value + 1);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "The sample could not be confirmed. Retry sends the same batch safely.",
+      );
+    } finally {
+      setSampleBusy(false);
     }
   }
   return (
@@ -121,7 +209,7 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
         </div>
         {isAdmin && (
           <Button
-            disabled={busy || loading}
+            disabled={locked || loading}
             onClick={() => {
               setError("");
               setReload((n) => n + 1);
@@ -131,10 +219,28 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
           </Button>
         )}
       </div>
+      <div className="gateway-guide" aria-label="Gateway setup guide">
+        <div>
+          <KeyRound size={20} />
+          <strong>Create access</strong>
+          <p>Choose one asset and issue its private sender key.</p>
+        </div>
+        <div>
+          <Radio size={20} />
+          <strong>Send a sample</strong>
+          <p>
+            Test here in your browser, or copy the key to an external sender.
+          </p>
+        </div>
+        <div>
+          <ShieldCheck size={20} />
+          <strong>Review the readings</strong>
+          <p>Open Sensor registry, check alignment and publish after review.</p>
+        </div>
+      </div>
       <p className="local-note">
-        HTTP event ingestion only. No physical device, MQTT broker, PLC controls
-        or maintenance approvals are connected by this feature. Publication
-        still needs a reviewed, aligned frame.
+        Demonstration telemetry only. No plant equipment is connected. Saving
+        events and publishing equipment snapshots remain separate actions.
       </p>
       {!isAdmin ? (
         <p className="lab-footnote">
@@ -157,12 +263,14 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
             <div className="gateway-secret">
               <strong>New credential · {issuedName}</strong>
               <p>
-                Displayed once. Copy it for the local sender. The server stores
-                only a hash.
+                This private key appears only once. You can test it below
+                without copying it. Leave this section only after saving it
+                privately if you need an external sender.
               </p>
               <label>
                 New gateway credential
                 <input
+                  ref={credentialInput}
                   type={reveal ? "text" : "password"}
                   value={credential}
                   readOnly
@@ -174,8 +282,11 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
                 <Button onClick={() => setReveal((v) => !v)}>
                   {reveal ? "Hide value" : "Show credential"}
                 </Button>
-                <Button onClick={copy}>Copy credential</Button>
+                <Button icon={Copy} onClick={copy}>
+                  Copy credential
+                </Button>
                 <Button
+                  disabled={locked}
                   onClick={() => {
                     setCredential("");
                     setReveal(false);
@@ -184,12 +295,45 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
                   Clear displayed credential
                 </Button>
               </div>
+              <div className="gateway-browser-test">
+                <div>
+                  <strong>
+                    {sampleDone
+                      ? "Sample received"
+                      : "Test this gateway in your browser"}
+                  </strong>
+                  <p>
+                    One simulated batch: 2 mm/s · 70 °C · 5 bar · 120 m³/h. Uses
+                    this gateway key; no account session is sent with the
+                    sample.
+                  </p>
+                </div>
+                <Button
+                  className="primary"
+                  icon={sampleDone ? CheckCircle2 : Radio}
+                  disabled={locked || sampleDone}
+                  onClick={sendSample}
+                >
+                  {sampleBusy
+                    ? "Sending…"
+                    : sampleDone
+                      ? "Four-channel sample sent"
+                      : sampleAttempt.current
+                        ? "Retry test sample"
+                        : "Send test sample"}
+                </Button>
+                {sampleDone && (
+                  <a className="btn" href="#sensors">
+                    Open sensor registry
+                  </a>
+                )}
+              </div>
             </div>
           )}
           <div className="gateway-tools">
             <Button
               className="primary"
-              disabled={busy || loading || !data?.assets.length}
+              disabled={locked || loading || !data?.assets.length}
               onClick={() => {
                 setCreating((v) => !v);
                 setCredential("");
@@ -213,7 +357,7 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
                     minLength={1}
                     maxLength={100}
                     value={name}
-                    disabled={busy}
+                    disabled={locked}
                     placeholder="Local C-202 sender"
                     onChange={(e) => setName(e.target.value)}
                   />
@@ -223,7 +367,7 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
                   <select
                     value={asset}
                     required
-                    disabled={busy}
+                    disabled={locked}
                     onChange={(e) => setAsset(e.target.value)}
                   >
                     {data?.assets.map((a) => (
@@ -241,7 +385,7 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
                     min={1}
                     max={90}
                     value={days}
-                    disabled={busy}
+                    disabled={locked}
                     onChange={(e) => setDays(Number(e.target.value))}
                   />
                 </label>
@@ -253,7 +397,7 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
               <Button
                 type="submit"
                 className="primary"
-                disabled={busy || !name.trim() || !asset}
+                disabled={locked || !name.trim() || !asset}
               >
                 {busy ? "Issuing…" : "Issue scoped credential"}
               </Button>
@@ -288,7 +432,9 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
                         <code>{g.credential_hint}</code>
                       </td>
                       <td>
-                        <strong>{g.status}</strong>
+                        <span className={`gateway-state ${g.status}`}>
+                          {g.status}
+                        </span>
                         <small>
                           {date(g.expires, true)} · v{g.version}
                         </small>
@@ -304,7 +450,7 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
                       <td>
                         <div className="gateway-row-actions">
                           <Button
-                            disabled={busy || g.status === "revoked"}
+                            disabled={locked || g.status === "revoked"}
                             onClick={() =>
                               void request(`/gateways/${g.id}/rotate`, {
                                 expected_version: g.version,
@@ -315,7 +461,7 @@ export function GatewayPanel({ isAdmin }: { isAdmin: boolean }) {
                             Rotate credential
                           </Button>
                           <Button
-                            disabled={busy || g.status === "revoked"}
+                            disabled={locked || g.status === "revoked"}
                             onClick={() =>
                               void request(`/gateways/${g.id}/revoke`, {
                                 expected_version: g.version,

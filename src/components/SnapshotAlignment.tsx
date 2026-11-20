@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, date } from "../api";
 import { Button, Spinner } from "./ui";
+import { CheckCircle2, Clock3, RefreshCw, ShieldCheck } from "lucide-react";
+import {
+  alignmentWindow,
+  duration,
+  signalSource,
+  type SensorWindow,
+} from "../lib/alignment";
 
 interface Frame {
   ready: boolean;
@@ -46,6 +53,13 @@ export function SnapshotAlignment({
   onEventsSaved: () => void;
   onBusyChange: (busy: boolean) => void;
 }) {
+  const [sensors, setSensors] = useState<SensorWindow[]>([]);
+  const [clock, setClock] = useState(() => Date.now() / 1000);
+  const [reviewed, setReviewed] = useState(false);
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now() / 1000), 1000);
+    return () => clearInterval(timer);
+  }, []);
   const [frame, setFrame] = useState<Frame | null>(null),
     [history, setHistory] = useState<Projection[]>([]);
   const [loading, setLoading] = useState(true),
@@ -68,6 +82,7 @@ export function SnapshotAlignment({
     let stop = false;
     setLoading(true);
     setFrame(null);
+    setReviewed(false);
     Promise.all([
       api<Frame>(
         `/snapshot-projections/preview?asset_id=${encodeURIComponent(assetId)}`,
@@ -75,11 +90,16 @@ export function SnapshotAlignment({
       api<{ items: Projection[] }>(
         `/snapshot-projections/history?asset_id=${encodeURIComponent(assetId)}`,
       ),
+      api<{ items: SensorWindow[] }>(
+        `/sensors?asset_id=${encodeURIComponent(assetId)}`,
+      ),
     ])
-      .then(([f, h]) => {
+      .then(([f, h, registry]) => {
         if (!stop) {
           setFrame(f);
           setHistory(h.items);
+          setSensors(registry.items);
+          setClock(Date.now() / 1000);
         }
       })
       .catch((e) => {
@@ -93,7 +113,7 @@ export function SnapshotAlignment({
     };
   }, [assetId, reload]);
   async function publish() {
-    if (!frame?.ready || busy) return;
+    if (!frame || !windowState.eligible || !reviewed || busy) return;
     setBusy(true);
     setError("");
     setNotice("");
@@ -112,6 +132,9 @@ export function SnapshotAlignment({
       setReload((n) => n + 1);
     } catch (e) {
       setError((e as Error).message);
+      setReviewed(false);
+      setFrame(null);
+      setReload((n) => n + 1);
     } finally {
       setBusy(false);
     }
@@ -162,6 +185,8 @@ export function SnapshotAlignment({
       setBusy(false);
     }
   }
+  const windowState = alignmentWindow(frame, sensors, clock);
+  const published = notice.startsWith("Snapshot published");
   return (
     <section className="alignment-panel">
       <div className="event-history-heading">
@@ -176,13 +201,13 @@ export function SnapshotAlignment({
             setReload((n) => n + 1);
           }}
         >
-          Check alignment
+          <RefreshCw size={15} /> Check alignment
         </Button>
       </div>
       <p className="local-note">
-        Independent events affect equipment analytics only after an eligible
-        frame is explicitly published. Pause Live monitoring simulation before
-        testing. The oldest channel time becomes the snapshot time.
+        Review four fresh readings, confirm their values, then publish. Keep
+        simulation paused while testing. Publication never happens
+        automatically.
       </p>
       {error && (
         <p className="form-error" role="alert">
@@ -200,26 +225,91 @@ export function SnapshotAlignment({
         frame && (
           <>
             <div
-              className={`alignment-status ${frame.ready ? "ready" : "blocked"}`}
+              className={`alignment-status ${published ? "published" : windowState.eligible ? "ready" : "blocked"}`}
+              role="status"
             >
-              <strong>
-                {frame.ready
-                  ? "Ready for review & publication"
-                  : "Publication blocked"}
-              </strong>
-              <span>
-                {frame.skew_seconds === null
-                  ? "Awaiting all four channels"
-                  : `Observed-time spread: ${frame.skew_seconds.toFixed(3)} seconds`}
-              </span>
+              <div className="alignment-status-heading">
+                {published ? (
+                  <CheckCircle2 size={22} />
+                ) : windowState.eligible ? (
+                  <ShieldCheck size={22} />
+                ) : (
+                  <Clock3 size={22} />
+                )}
+                <div>
+                  <strong>
+                    {published
+                      ? "Snapshot published"
+                      : windowState.eligible
+                        ? "Fresh readings · ready to review"
+                        : "Fresh readings needed"}
+                  </strong>
+                  <span>
+                    {published
+                      ? "A new frame is required before the next publication."
+                      : frame.ready && !windowState.eligible
+                        ? "These readings have expired. Send a new sample or create a fresh test frame below."
+                        : frame.skew_seconds === null
+                          ? "All four channels are required."
+                          : `Time spread: ${frame.skew_seconds.toFixed(3)} seconds · maximum 5 seconds`}
+                  </span>
+                </div>
+              </div>
+              {windowState.eligible && (
+                <span className="freshness-timer">
+                  <Clock3 size={16} /> Review window:{" "}
+                  {duration(windowState.remaining)} remaining{" "}
+                  <small>Server checks freshness again on publication.</small>
+                </span>
+              )}
             </div>
-            {!!frame.reasons.length && (
+            {!published && !!frame.reasons.length && (
               <ul className="alignment-reasons">
-                {frame.reasons.map((r) => (
-                  <li key={r}>{r}</li>
+                {frame.reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
                 ))}
               </ul>
             )}
+            {canWrite && (
+              <div className="alignment-review-bar">
+                <label className="review-confirmation">
+                  <input
+                    type="checkbox"
+                    checked={reviewed}
+                    disabled={busy || !windowState.eligible}
+                    onChange={(e) => setReviewed(e.target.checked)}
+                  />
+                  <span>I reviewed all four readings</span>
+                </label>
+                <div className="alignment-actions">
+                  <Button
+                    disabled={busy}
+                    onClick={() => setShowTest((value) => !value)}
+                  >
+                    {showTest ? "Hide test form" : "Create aligned test frame"}
+                  </Button>
+                  <Button
+                    className="primary"
+                    disabled={busy || !windowState.eligible || !reviewed}
+                    onClick={publish}
+                  >
+                    {busy ? "Publishing…" : "Publish reviewed snapshot"}
+                  </Button>
+                </div>
+              </div>
+            )}
+            <div className="alignment-reading-summary">
+              {frame.rows.map((row) => (
+                <div key={row.channel}>
+                  <span>{row.channel}</span>
+                  <strong>
+                    {row.event
+                      ? `${row.event.value} ${row.event.unit}`
+                      : "Missing"}
+                  </strong>
+                </div>
+              ))}
+            </div>
             <div className="table-scroll">
               <table className="data-table event-table">
                 <thead>
@@ -249,8 +339,12 @@ export function SnapshotAlignment({
                         {r.event ? (
                           <>
                             <strong>{date(r.event.observed_at, true)}</strong>
-                            <small>{r.event.source}</small>
-                            <code title={r.event.id}>{r.event.id}</code>
+                            <small>{signalSource(r.event.source)}</small>
+                            <details className="evidence-disclosure">
+                              <summary>View traceability</summary>
+                              <code>{r.event.source}</code>
+                              <code>{r.event.id}</code>
+                            </details>
                           </>
                         ) : (
                           "—"
@@ -261,26 +355,12 @@ export function SnapshotAlignment({
                 </tbody>
               </table>
             </div>
-            {canWrite && (
-              <div className="modal-actions">
-                <Button disabled={busy} onClick={() => setShowTest((s) => !s)}>
-                  {showTest ? "Hide test form" : "Create aligned test frame"}
-                </Button>
-                <Button
-                  className="primary"
-                  disabled={busy || !frame.ready}
-                  onClick={publish}
-                >
-                  {busy ? "Working…" : "Publish reviewed snapshot"}
-                </Button>
-              </div>
-            )}
           </>
         )
       )}
       {showTest && canWrite && (
         <form onSubmit={saveTest} className="event-entry">
-          <h3>Manual four-channel test frame</h3>
+          <h3>Create fresh demonstration readings</h3>
           <p>
             Creates four simulated measurements with one observation time.
             Source: manual-alignment-ui. Review values before saving; this does
@@ -304,6 +384,10 @@ export function SnapshotAlignment({
               </label>
             ))}
           </div>
+          <p className="test-frame-tip">
+            After saving, review the new values above, check the review box and
+            publish before the countdown expires.
+          </p>
           <Button className="primary" type="submit" disabled={busy}>
             {busy ? "Saving…" : "Save four test events"}
           </Button>

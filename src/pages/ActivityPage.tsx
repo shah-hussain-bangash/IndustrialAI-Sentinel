@@ -13,10 +13,20 @@ import { Empty } from "../components/ui";
 
 export function ActivityPage({ events }: { events: AuditEvent[] }) {
   const [query, setQuery] = useState("");
-  const filtered = events.filter((e) =>
-    `${e.action} ${e.actor} ${e.target}`
-      .toLowerCase()
-      .includes(query.toLowerCase()),
+  const [category, setCategory] = useState("All activity");
+  const matches = (action: string) =>
+    category === "All activity" ||
+    (category === "Telemetry"
+      ? /sensor|gateway|snapshot/i
+      : category === "Maintenance"
+        ? /order|approv|investigation|recommendation/i
+        : /document/i
+    ).test(action);
+  const filtered = events.filter(
+    (e) =>
+      `${e.action} ${e.actor} ${e.target} ${e.details || ""}`
+        .toLowerCase()
+        .includes(query.toLowerCase()) && matches(e.action),
   );
   return (
     <section className="panel">
@@ -36,6 +46,21 @@ export function ActivityPage({ events }: { events: AuditEvent[] }) {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
+      </div>
+      <div className="activity-filters" aria-label="Activity categories">
+        {["All activity", "Telemetry", "Maintenance", "Documents"].map(
+          (label) => (
+            <button
+              key={label}
+              aria-pressed={category === label}
+              className={category === label ? "active" : ""}
+              onClick={() => setCategory(label)}
+            >
+              {label}
+            </button>
+          ),
+        )}
+        <span>{filtered.length} matching records</span>
       </div>
       <div className="activity-timeline">
         {filtered.map((e) => (
@@ -57,13 +82,13 @@ export function ActivityPage({ events }: { events: AuditEvent[] }) {
               <p>{e.target}</p>
               <small>
                 {e.actor} <i>·</i> {e.site}
-                {e.details && (
-                  <>
-                    {" "}
-                    <i>·</i> {e.details}
-                  </>
-                )}
               </small>
+              {e.details && (
+                <details className="audit-evidence">
+                  <summary>Evidence & record IDs</summary>
+                  <p>{e.details}</p>
+                </details>
+              )}
             </div>
           </div>
         ))}

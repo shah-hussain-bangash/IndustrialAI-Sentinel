@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import {
-  ArrowRight,
+  Activity,
+  Waves,
+  Thermometer,
+  Gauge,
+  Droplets,
   CheckCircle2,
   Circle,
   Plus,
@@ -65,15 +69,60 @@ export function MonitorPage({
     }
   }, [id, refreshKey]);
   return (
-    <>
+    <div className="monitor-experience">
+      <section className="monitor-command monitor-photo-command">
+        <img
+          className="monitor-command-photo"
+          src="/assets/photos/compressor-room.jpg"
+          alt=""
+        />
+        <div className="monitor-command-copy">
+          <span className="monitor-eyebrow">
+            <Activity size={16} /> EQUIPMENT SIGNALS
+          </span>
+          <h2>Every reading. A clearer picture.</h2>
+          <p>
+            Select equipment, follow its signals and review the conditions that
+            need attention.
+          </p>
+          <div className="monitor-command-meta">
+            <span>{assets.length} assets in scope</span>
+            <span>
+              {episodes.filter((e) => e.state !== "resolved").length} open
+              condition episodes
+            </span>
+            <span>{live ? "Demo replay running" : "Demo replay paused"}</span>
+          </div>
+        </div>
+        <label className="monitor-equipment-picker">
+          Equipment to monitor
+          <select
+            aria-label="Monitored equipment"
+            value={id || ""}
+            onChange={(e) => setSelected(e.target.value)}
+          >
+            {assets.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.tag} · {a.name}
+              </option>
+            ))}
+          </select>
+          <small>
+            {assets.find((a) => a.id === id)?.site || "No equipment available"}
+          </small>
+          <span className="monitor-photo-note">
+            Industrial installation · Illustrative photograph
+          </span>
+        </label>
+      </section>
       <div className="simulation-banner">
         <div>
           <Radio size={22} />
           <span>
-            <strong>Sensor simulation studio</strong>
+            <strong>Demo replay controls</strong>
             <small>
-              Generate readings and test condition changes. No plant equipment
-              is connected.
+              Generate fresh simulated readings across the workspace. No plant
+              equipment is connected.
             </small>
           </span>
         </div>
@@ -110,50 +159,55 @@ export function MonitorPage({
           </Button>
         </div>
       </div>
+      <div className="signal-tabs" aria-label="Choose a signal to chart">
+        {(["vibration", "temperature", "pressure", "flow"] as const).map(
+          (f) => (
+            <button
+              key={f}
+              aria-pressed={field === f}
+              className={field === f ? "active" : ""}
+              onClick={() => setField(f)}
+            >
+              <span className="monitor-signal-label">
+                {(() => {
+                  const Icon = {
+                    vibration: Waves,
+                    temperature: Thermometer,
+                    pressure: Gauge,
+                    flow: Droplets,
+                  }[f];
+                  return <Icon size={20} />;
+                })()}
+                {human(f)}
+              </span>
+              <strong>
+                {detail?.asset.reading?.[f].toFixed(2) ?? "—"}{" "}
+                <small>
+                  {
+                    {
+                      vibration: "mm/s",
+                      temperature: "°C",
+                      pressure: "bar",
+                      flow: "m³/h",
+                    }[f]
+                  }
+                </small>
+              </strong>
+              <span className="monitor-signal-foot">
+                {field === f ? "Viewing trend" : "View trend"}
+              </span>
+            </button>
+          ),
+        )}
+      </div>
       <div className="monitor-grid">
         <section className="panel">
           <div className="panel-header">
             <div>
-              <h2>Operating signals</h2>
-              <p>Four-channel snapshots · GST</p>
+              <h2>Signal history</h2>
+              <p>Latest equipment snapshots · Times in GST</p>
             </div>
-            <select
-              aria-label="Monitored equipment"
-              value={id || ""}
-              onChange={(e) => setSelected(e.target.value)}
-            >
-              {assets.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.tag} · {a.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="signal-tabs">
-            {(["vibration", "temperature", "pressure", "flow"] as const).map(
-              (f) => (
-                <button
-                  key={f}
-                  className={field === f ? "active" : ""}
-                  onClick={() => setField(f)}
-                >
-                  <span>{human(f)}</span>
-                  <strong>
-                    {detail?.asset.reading?.[f].toFixed(2) ?? "—"}{" "}
-                    <small>
-                      {
-                        {
-                          vibration: "mm/s",
-                          temperature: "°C",
-                          pressure: "bar",
-                          flow: "m³/h",
-                        }[f]
-                      }
-                    </small>
-                  </strong>
-                </button>
-              ),
-            )}
+            <span className="monitor-chart-label">{human(field)} trend</span>
           </div>
           <Chart
             data={detail?.readings || []}
@@ -169,14 +223,25 @@ export function MonitorPage({
               {live ? "Updating every 5 seconds" : "Simulation paused"}
             </span>
             <button onClick={() => id && openAsset(id)}>
-              View asset context <ArrowRight size={13} />
+              Equipment details
             </button>
           </div>
         </section>
-        <section className="panel signal-quality">
+        <section
+          className="panel signal-quality"
+          data-state={
+            !detail?.asset.reading
+              ? "missing"
+              : (detail.asset.freshness_seconds ?? Infinity) > 3600
+                ? "stale"
+                : detail.asset.reading.quality === "good"
+                  ? "fresh"
+                  : "review"
+          }
+        >
           <div className="panel-header">
             <div>
-              <h2>Signal quality</h2>
+              <h2>Reading status</h2>
               <p>Latest snapshot</p>
             </div>
             <ShieldCheck size={19} />
@@ -199,7 +264,9 @@ export function MonitorPage({
             </strong>
             <p>
               {detail?.asset.reading
-                ? "Inspect freshness and operating context before a maintenance decision."
+                ? (detail.asset.freshness_seconds ?? Infinity) > 3600
+                  ? "This snapshot is over an hour old. Start the demo replay for fresh simulated readings, or review a new sensor frame in Sensor registry."
+                  : "Recent equipment snapshot available. Review quality and operating context before deciding on maintenance."
                 : "Ingest a snapshot to begin."}
             </p>
           </div>
@@ -250,10 +317,10 @@ export function MonitorPage({
           </dl>
         </section>
       </div>
-      <section className="panel">
+      <section className="panel monitor-episodes">
         <div className="panel-header">
           <div>
-            <h2>Condition episode queue</h2>
+            <h2>Conditions to review</h2>
             <p>Acknowledge a signal, then investigate its context.</p>
           </div>
           <Badge value="warning">
@@ -333,6 +400,6 @@ export function MonitorPage({
           />
         )}
       </section>
-    </>
+    </div>
   );
 }

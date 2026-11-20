@@ -8,6 +8,7 @@ import numpy as np
 from sqlalchemy import select
 from .database import (
     Base,
+    Organization,
     engine,
     SessionLocal,
     User,
@@ -38,6 +39,9 @@ def initialize():
     if os.getenv("AUTO_CREATE_SCHEMA", "true").lower() == "true":
         Base.metadata.create_all(engine)
     with SessionLocal() as db:
+        if not db.get(Organization, "primary"):
+            db.add(Organization(id="primary", name="Your organization", description="", configured=0, version=1))
+            db.commit()
         if db.scalar(select(User).limit(1)):
             return
         if not DEMO_ENABLED:

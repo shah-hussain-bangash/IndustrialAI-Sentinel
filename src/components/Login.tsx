@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { api, post, human, type User } from "../api";
 
-import { Button, MiniSpark, EquipmentArt } from "./ui";
+import { Button } from "./ui";
 const roleIcons = {
   admin: Settings2,
   approver: UserCheck,
@@ -75,7 +75,8 @@ export function LoginChoices({
             <span>DEMO ACCESS</span>
           </div>
           <p className="demo-intro">
-            Choose your role. Step into the workspace.
+            Admin manages telemetry access. Engineer reviews equipment and
+            readings.
           </p>
         </>
       )}
@@ -103,7 +104,17 @@ export function LoginChoices({
                   </span>
                   <div>
                     <strong>{human(u.role)}</strong>
-                    <small>{u.name}</small>
+                    <small>
+                      {u.role === "admin"
+                        ? "Telemetry access & settings"
+                        : u.role === "engineer"
+                          ? "Equipment & investigations"
+                          : u.role === "approver"
+                            ? "Independent review"
+                            : u.role === "planner"
+                              ? "Planning & work orders"
+                              : "Inspection & completion"}
+                    </small>
                   </div>
                   {busy === u.id ? (
                     <Loader2 className="spin" size={16} />
@@ -170,62 +181,26 @@ export function LoginScreen({
             ENERGY & INDUSTRIAL OPERATIONS
           </span>
           <h1>
-            Industrial intelligence.
+            Clarity for every signal.
             <br />
-            Operational confidence.
+            Confidence in every decision.
           </h1>
           <p>
             See the signals. Understand the evidence. Give your team a clearer
             path from equipment insight to approved action.
           </p>
-          <div className="login-plant">
-            <div className="plant-caption">
-              <span>
-                <Radio size={12} /> CONNECTED EQUIPMENT
-              </span>
-              <span>Illustrative view</span>
-            </div>
-            <EquipmentArt kind="Pump" size="large" />
-            <div className="floating-signal">
-              <Waves size={17} />
-              <span>Equipment intelligence</span>
-              <MiniSpark />
-            </div>
-            <div className="floating-approval">
-              <ShieldCheck size={17} />
-              Human review built in
-            </div>
-          </div>
-          <div className="login-workflow" aria-label="Workflow preview">
-            <span className="login-preview-label">ONE CONNECTED WORKFLOW</span>
+          <div className="signin-assurance">
+            <ShieldCheck size={24} />
             <div>
+              <strong>Evidence before action.</strong>
               <span>
-                <b>01</b> Monitor signals
-              </span>
-              <ArrowRight size={15} />
-              <span>
-                <b>02</b> Review evidence
-              </span>
-              <ArrowRight size={15} />
-              <span>
-                <b>03</b> Approve action
+                Monitor equipment. Review findings. Plan with confidence.
               </span>
             </div>
           </div>
-          <div className="login-capabilities">
-            <span>
-              <Radio size={16} />
-              Sensor monitoring
-            </span>
-            <span>
-              <Sparkles size={16} />
-              Evidence workflows
-            </span>
-            <span>
-              <ClipboardCheck size={16} />
-              Maintenance planning
-            </span>
-          </div>
+          <span className="signin-image-credit">
+            Industrial infrastructure · Illustrative photograph
+          </span>
         </div>
         <div className="login-story-footer">
           <span>IndustrialAI Sentinel · Reference application</span>
@@ -240,8 +215,8 @@ export function LoginScreen({
             <LockKeyhole size={24} />
           </div>
           <div className="eyebrow">YOUR OPERATIONS WORKSPACE</div>
-          <h2>Welcome back.</h2>
-          <p>Sign in to your IndustrialAI Sentinel workspace.</p>
+          <h2>Welcome to Sentinel.</h2>
+          <p>Your equipment intelligence workspace. Sign in to continue.</p>
           <div className="manual-login">
             <form onSubmit={submit}>
               <label>
@@ -288,7 +263,6 @@ export function LoginScreen({
                 disabled={busy}
               >
                 {busy ? "Signing in…" : "Sign in to workspace"}
-                <ArrowRight size={16} />
               </Button>
             </form>
           </div>
