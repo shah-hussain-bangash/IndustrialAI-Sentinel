@@ -72,7 +72,7 @@ def create_team_router():
         ids = memberships(db, user)
         # Opaque optimistic-concurrency token; never return stored password hashes.
         version = hashlib.sha256(json.dumps([user.id, user.name, user.email, user.role, ids, user.password_hash]).encode()).hexdigest()
-        return dict(id=user.id, name=user.name, email=user.email, role=user.role, active=user.role != 'disabled', site_ids=ids, version=version)
+        return dict(id=user.id, name=user.name, email=user.email, role=user.role, active=user.role not in ('disabled', 'invited'), site_ids=ids, version=version)
 
     def lock_company(db):
         row = db.get(Organization, 'primary')
@@ -131,6 +131,8 @@ def create_team_router():
         if not member:
             raise HTTPException(404, 'Team member not found.')
         db.refresh(member)
+        if member.role == 'invited' and body.role != 'disabled':
+            raise HTTPException(409, 'Pending accounts must accept their invitation before role changes. You may disable this invitation instead.')
         before = serialize(db, member)
         if before['version'] != body.expected_version:
             raise HTTPException(409, 'This account changed. Refresh and review its latest access.')

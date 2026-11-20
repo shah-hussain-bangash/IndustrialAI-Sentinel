@@ -51,6 +51,7 @@ from .gateways import create_gateway_router
 from fastapi.exceptions import RequestValidationError
 from .foundation import create_foundation_router
 from .team import create_team_router
+from .accounts import create_account_router
 from .sites import create_site_router
 
 
@@ -71,7 +72,11 @@ async def lifespan(app):
         raise RuntimeError("Telemetry gateway schema upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     if existing.has_table("assets") and not all(existing.has_table(t) for t in ("organization", "site_areas", "equipment_systems", "equipment_placements")):
         raise RuntimeError("Organization hierarchy upgrade required. Stop Sentinel and run scripts/upgrade_database.py before restarting.")
+    if existing.has_table("assets") and not existing.has_table("account_links"):
+        raise RuntimeError("Account email upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     initialize()
+    if not inspect(engine).has_table("account_links"):
+        raise RuntimeError("Account email upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     if not inspect(engine).has_table("sites"):
         raise RuntimeError("Site schema is missing. Stop the server and run scripts/upgrade_database.py before restarting.")
     with SessionLocal() as db:
@@ -469,7 +474,7 @@ def demo_accounts(db: Session = Depends(get_db)):
         "accounts": [
             user_json(canonicalize_user(u, db))
             for u in db.scalars(select(User).order_by(User.email))
-            if u.role != 'disabled' and password_valid(DEMO_PASSWORD, u.password_hash)
+            if u.role not in ('disabled', 'invited') and password_valid(DEMO_PASSWORD, u.password_hash)
         ],
     }
 
@@ -484,7 +489,7 @@ def login(body: Login, request: Request, response: Response, db: Session = Depen
         raise HTTPException(429, "Too many sign-in attempts. Wait a minute before retrying.")
     attempts.append(t)
     user = db.scalar(select(User).where(User.email == body.email.lower().strip()))
-    if not user or user.role == 'disabled' or not password_valid(body.password, user.password_hash):
+    if not user or user.role in ('disabled', 'invited') or not password_valid(body.password, user.password_hash):
         raise HTTPException(401, "Email or password is incorrect.")
     token = secrets.token_urlsafe(36)
     csrf = secrets.token_urlsafe(24)
@@ -1431,6 +1436,7 @@ app.include_router(create_gateway_router(accessible_assets, asset_for, idempoten
 app.include_router(create_site_router())
 app.include_router(create_foundation_router(idempotent, finish, asset_for))
 app.include_router(create_team_router())
+app.include_router(create_account_router())
 
 DIST = Path(__file__).resolve().parents[1] / "dist"
 if DIST.exists():

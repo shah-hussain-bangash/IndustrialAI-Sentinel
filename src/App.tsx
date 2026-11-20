@@ -47,6 +47,7 @@ import {
 } from "./api";
 import { initials, Badge, Button, Spinner, Modal } from "./components/ui";
 import { LoginScreen, LoginChoices } from "./components/Login";
+import { AccountLinkScreen } from "./components/AccountRecovery";
 import type { Data, Page } from "./types";
 import { headerImages } from "./lib/headerImages";
 import { OrganizationPage } from "./pages/OrganizationPage";
@@ -179,6 +180,8 @@ const descriptions: Record<Page, string> = {
 };
 
 export default function App() {
+  const [accountToken, setAccountToken] = useState(() => window.location.hash.startsWith('#account-link=') ? window.location.hash.slice('#account-link='.length) : '');
+  useEffect(()=>{if(accountToken)window.history.replaceState(null,'',window.location.pathname+window.location.search+'#account-link');},[accountToken]);
   const [user, setUser] = useState<User | null>(null),
     [authReady, setAuthReady] = useState(false);
   const [page, setPage] = useState<Page>(() => {
@@ -341,6 +344,7 @@ export default function App() {
   }, [live, scenario, user, refresh, notify]);
   useEffect(() => {
     const changed = () => {
+      if(window.location.hash.startsWith('#account-link=')) { setAccountToken(window.location.hash.slice('#account-link='.length)); return; }
       const id = window.location.hash.slice(1).split("/")[0];
       const destination = pages.find((p) => p.id === id);
       if (destination) {
@@ -389,6 +393,7 @@ export default function App() {
         <Spinner />
       </div>
     );
+  if (accountToken) return <AccountLinkScreen token={accountToken} onDone={()=>{setAccountToken('');window.location.hash='overview';setUser(null);}}/>;
   if (!user)
     return (
       <>

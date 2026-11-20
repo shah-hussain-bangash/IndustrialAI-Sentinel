@@ -143,6 +143,22 @@ class LoginSession(Base):
     expires: Mapped[float] = mapped_column(Float)
 
 
+class AccountLink(Base):
+    __tablename__ = "account_links"
+    __table_args__ = (
+        CheckConstraint("purpose IN ('invite','reset')", name="ck_account_link_purpose"),
+        CheckConstraint("state IN ('pending','sent','failed','used','revoked')", name="ck_account_link_state"),
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    purpose: Mapped[str] = mapped_column(String(10))
+    intended_role: Mapped[str] = mapped_column(String(30))
+    account_version: Mapped[str] = mapped_column(String(64))
+    expires: Mapped[float] = mapped_column(Float)
+    created: Mapped[float] = mapped_column(Float, default=now)
+    state: Mapped[str] = mapped_column(String(12), default="pending")
+
+
 class Asset(Base):
     __tablename__ = "assets"
     __table_args__ = (UniqueConstraint("site", "tag"), UniqueConstraint("id", "site_id", name="uq_asset_site_identity"), ForeignKeyConstraint(["site_id", "site"], ["sites.id", "sites.name"], name="fk_asset_site_identity"))

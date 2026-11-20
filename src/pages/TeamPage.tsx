@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Plus, RefreshCw, ShieldCheck, Users } from 'lucide-react';
 import { api, post, ApiError, type User } from '../api';
 import { Button, Spinner } from '../components/ui';
+import { AccountEmailPanel } from '../components/AccountEmailPanel';
 
 type Member = { id: string; name: string; email: string; role: string; active: boolean; site_ids: string[]; version: string };
 type Directory = { items: Member[]; sites: {id: string; name: string}[]; current_user_id: string };
@@ -45,7 +46,7 @@ export function TeamPage({user}: {user: User}) {
   function open(member: Member | 'new') {
     setEdit(member); setName(member === 'new' ? '' : member.name);
     setEmail(member === 'new' ? '' : member.email); setPassword('');
-    setRole(member === 'new' ? 'observer' : member.role);
+    setRole(member === 'new' ? 'observer' : member.role==='invited'?'disabled':member.role);
     setSites(member === 'new' ? [] : member.site_ids); setReviewed(false); setError(''); setNotice(''); setPasswordIssue('');
   }
   async function save(e: FormEvent) {
@@ -85,8 +86,9 @@ export function TeamPage({user}: {user: User}) {
         <div className="team-toolbar"><div><h2>People and permissions</h2><p>Manage company-wide roles and explicit site access.</p></div><div><Button icon={RefreshCw} onClick={load} disabled={busy || loading}>Refresh</Button> <Button className="primary" icon={Plus} onClick={()=>open('new')} disabled={busy}>Add team member</Button></div></div>
         <label className="team-search">Find a team member<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, email or role"/></label>
         <p className="team-explanation">A role applies across the selected sites. Team administration requires access to every company site. Your own account is protected.</p>
-        <div className="team-table"><table><thead><tr><th>Team member</th><th>Role / status</th><th>Permitted sites</th><th>Action</th></tr></thead><tbody>{visible.map(m=><tr key={m.id}><td><strong>{m.name}</strong><small>{m.email}</small></td><td><span className={m.active?'team-active':'team-disabled'}>{m.active ? m.role : 'Disabled'}</span></td><td>{m.site_ids.map(id=>directory.sites.find(s=>s.id===id)?.name || 'Unavailable site').join(', ') || 'No sites'}</td><td>{m.id===directory.current_user_id ? <span>Your account</span> : <Button onClick={()=>open(m)} disabled={busy}>Manage access</Button>}</td></tr>)}</tbody></table>{!visible.length && <p>No team members match your search.</p>}</div>
+        <div className="team-table"><table><thead><tr><th>Team member</th><th>Role / status</th><th>Permitted sites</th><th>Action</th></tr></thead><tbody>{visible.map(m=><tr key={m.id}><td><strong>{m.name}</strong><small>{m.email}</small></td><td><span className={m.active?'team-active':'team-disabled'}>{m.role==='invited'?'Pending invitation':m.active ? m.role : 'Disabled'}</span></td><td>{m.site_ids.map(id=>directory.sites.find(s=>s.id===id)?.name || 'Unavailable site').join(', ') || 'No sites'}</td><td>{m.id===directory.current_user_id ? <span>Your account</span> : <Button onClick={()=>open(m)} disabled={busy}>Manage access</Button>}</td></tr>)}</tbody></table>{!visible.length && <p>No team members match your search.</p>}</div>
       </section>
+      <AccountEmailPanel sites={directory.sites} members={directory.items} onChanged={load}/>
       {edit && <section className="panel team-panel" aria-labelledby="team-form-title">
         <h2 id="team-form-title" ref={formHeading} tabIndex={-1}>{edit==='new'?'Create a team account':`Manage ${edit.name}`}</h2>
         <p>{edit==='new'?'Create an email sign-in account. No invitation email will be sent.':'Saving these changes signs this person out. Disabling blocks new sign-ins; records and history remain available.'}</p>

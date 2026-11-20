@@ -18,6 +18,7 @@ import {
 import { api, post, human, type User } from "../api";
 
 import { Button } from "./ui";
+import { ForgotPassword } from "./AccountRecovery";
 const roleIcons = {
   admin: Settings2,
   approver: UserCheck,
@@ -142,6 +143,7 @@ export function LoginScreen({
 }: {
   onLogin: (u: User, csrf: string) => void;
 }) {
+  const [forgot, setForgot] = useState(false);
   const [email, setEmail] = useState("engineer@sentinel.local"),
     [password, setPassword] = useState(""),
     [busy, setBusy] = useState(false),
@@ -218,7 +220,7 @@ export function LoginScreen({
           <h2>Welcome to Sentinel.</h2>
           <p>Your equipment intelligence workspace. Sign in to continue.</p>
           <div className="manual-login">
-            <form onSubmit={submit}>
+            {forgot ? <ForgotPassword onBack={()=>setForgot(false)}/> : <><form onSubmit={submit}>
               <label>
                 Email address
                 <input
@@ -264,7 +266,7 @@ export function LoginScreen({
               >
                 {busy ? "Signing in…" : "Sign in to workspace"}
               </Button>
-            </form>
+            </form><Button type="button" className="login-forgot-button" onClick={()=>setForgot(true)}>Forgot password?</Button></>}
           </div>
           <LoginChoices onLogin={onLogin} showHeading />
           <div className="login-footnote">
