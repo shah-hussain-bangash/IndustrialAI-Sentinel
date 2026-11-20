@@ -1,0 +1,32 @@
+INDUSTRIALAI SENTINEL - PROFESSIONAL UI RELEASE
+Reviewed 31 October 2026 (Asia/Dubai)
+
+DESIGN
+Navy navigation, white surfaces, blue primary actions, softly tinted secondary
+panels, semantic status badges, local fonts, larger labels, consistent spacing,
+rounded controls, responsive navigation and reduced-motion support.
+
+USABILITY
+Email sign-in is immediately visible; demo roles are in a separate disclosure.
+Password visibility has an explicit accessible button. Connection errors no
+longer prescribe a potentially incorrect API port. The overview shows a live
+workspace brief and distinguishes unavailable fleet readings from zero health.
+Equipment spotlight counts match the displayed cards. Card/table switch labels
+name the action the control will perform.
+
+VERIFICATION
+TypeScript compilation and Vite production build passed.
+Desktop review: overview, assets, monitoring, investigations, knowledge,
+work orders, activity and settings. Phone review: the same eight sections,
+including navigation and horizontally scrolling equipment tables.
+UI interactions: email sign-in, show/hide password, demo-role sign-in, equipment
+card/table switch, suggested knowledge query, evidence search and opening the
+matching source page. The installer was exercised twice in an isolated folder;
+old styles were backed up, database/config hashes were preserved and tampered
+update files were rejected.
+
+SCOPE
+This release changes presentation and the listed UI behaviors. Backend models,
+security policy, integrations, database and production-readiness claims are
+unchanged. The earlier backend suite was not rerun for this frontend release.
+The actual installed C:\industrialai-sentinel directory was not modified.

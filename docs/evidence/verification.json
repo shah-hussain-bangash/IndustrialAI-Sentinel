@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-30",
+  "application_version": "1.0.0",
+  "test_result": "PASS",
+  "backend_tests_passed": 24,
+  "frontend_typecheck_and_build": "PASS",
+  "clean_python_install": "PASS",
+  "pip_check": "PASS",
+  "sqlite_migration_upgrade_and_check": "PASS",
+  "sqlite_backup_integrity": "PASS",
+  "manual_browser_checks": [
+    "desktop overview",
+    "390px mobile layout without horizontal overflow",
+    "asset registry",
+    "simulation step",
+    "knowledge query with citations",
+    "exact page source viewer and nested close",
+    "work-order board",
+    "audit timeline",
+    "workspace settings"
+  ],
+  "unverified": [
+    "Docker runtime",
+    "PostgreSQL runtime",
+    "MQTT broker connection",
+    "real industrial data",
+    "vendor CMMS",
+    "enterprise identity"
+  ],
+  "data_mode": "synthetic demonstration; no external LLM provider calls"
+}

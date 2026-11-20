@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-02",
+  "phase": 3,
+  "step": 4,
+  "schema_revision": "0005",
+  "sqlite_tests": 107,
+  "postgresql_tests": 107,
+  "postgresql_version": "18.6",
+  "runtime_superuser": false,
+  "typescript_build": "passed",
+  "migration_and_metadata": "passed",
+  "postgres_dump_restore": "passed; actual test projection rows, events and readings preserved",
+  "browser_verification": "not performed; local browser access disabled",
+  "powershell_installer": "passed on populated revision 0004 fixture; all existing rows including independent events preserved; payload checksums match",
+  "scope": "Local source and isolated test databases. Installed application not modified. Production and plant acceptance pending."
+}

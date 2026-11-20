@@ -1,0 +1,19 @@
+{
+  "postgresql_version": "18.6",
+  "fresh_migration": "passed",
+  "schema_metadata_check": "passed",
+  "non_superuser_runtime_tests": "passed",
+  "legacy_0002_to_0003_preservation": "passed",
+  "pg_dump_restore": "passed",
+  "scope": "Isolated temporary local PostgreSQL cluster. Live SQLite application untouched.",
+  "sqlite_backend_tests": 69,
+  "postgresql_backend_tests": 69,
+  "frontend_typescript_and_build": "passed",
+  "schema_revision": "0003",
+  "ui_checks": "Site directory, administrator display edit, preserved identity, phone form",
+  "live_application_database_changed": false,
+  "remaining": "Live PostgreSQL cutover, production load testing and database row-level tenant policies are not part of this release.",
+  "full_installer_step1_to_step2_preservation": "passed",
+  "installer_fixture_sites": 2,
+  "installer_fixture_memberships": 11
+}

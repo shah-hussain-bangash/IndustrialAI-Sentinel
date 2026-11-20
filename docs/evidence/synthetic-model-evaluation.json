@@ -1,0 +1,20 @@
+{
+  "version": "synthetic-isolation-forest-v1",
+  "algorithm": "Isolation Forest",
+  "training_samples": 1500,
+  "evaluation_samples": 400,
+  "precision": 0.885,
+  "recall": 1.0,
+  "f1": 0.939,
+  "false_positives": 13,
+  "normal_samples": 300,
+  "data_type": "Synthetic held-out simulation",
+  "seed": 41,
+  "limitation": "Synthetic separation validates this demonstration only. It does not establish real equipment fault prediction or remaining useful life.",
+  "artifact_sha256": "e3904118f136b2e379d3d19b46906f35ebe5ba698004582f5e70d67ef9a0ad0d",
+  "training_array_sha256": "d48269a889a52a43fab8af5d19c4c621428602ce049ec3b652020734b23a200c",
+  "evaluation_seed": 89,
+  "split": "independently generated synthetic normal and synthetic abnormal holdout",
+  "promotion_status": "demo_only",
+  "real_equipment_validation": "not_performed"
+}

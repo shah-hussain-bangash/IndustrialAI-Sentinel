@@ -1,0 +1,12 @@
+{
+  "scope": "SQLite consistent online backup inspected in isolation; not a full disaster recovery drill or RPO/RTO proof.",
+  "integrity_check": "ok",
+  "row_counts": {
+    "assets": 12,
+    "readings": 1452,
+    "investigations": 5,
+    "work_orders": 3,
+    "recommendation_revisions": 5
+  },
+  "result": "PASS"
+}

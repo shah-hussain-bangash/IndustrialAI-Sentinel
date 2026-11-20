@@ -1,0 +1,7 @@
+SIGN-IN PRESENTATION UPDATE
+The demo-role selection is always visible. Each available role has a clear icon
+and card; there is no details/summary dropdown. Role login, manual sign-in and
+personal-password account handling keep their existing behavior. The sign-in
+panel, industrial illustration stage and mobile spacing have been refined.
+TypeScript/build passed. Desktop and phone views were inspected. Direct Engineer
+role sign-in was verified. No backend or database changes were made.

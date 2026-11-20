@@ -1,0 +1,43 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+# Runtime data, uploads, backup copies and reports
+data/
+uploads/
+backups/
+.theme-backups/
+reports/
+files/
+*.db
+*.db-*
+*.sqlite*
+*.dump
+*.bak
+*.log
+*.zip
+# Generated dependencies and build outputs
+node_modules/
+dist/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+coverage/
+playwright-report/
+test-results/
+# Machine and editor files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

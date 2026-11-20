@@ -1,0 +1,2 @@
+# Optional MQTT connector. The default application does not need a broker.
+paho-mqtt==2.1.0

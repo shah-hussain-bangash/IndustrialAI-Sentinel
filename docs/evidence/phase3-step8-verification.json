@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-03",
+  "phase": 3,
+  "step": 8,
+  "schema_revision": "0007",
+  "sqlite_tests": 163,
+  "postgresql_application_suite_tests": 163,
+  "postgresql_version": "18.6",
+  "runtime_superuser": false,
+  "archive_formats": "PDF/TXT/MD exact-byte downloads verified",
+  "original_file_recovery": "checksum/size/document binding and legacy gaps covered; SQLite-only recovery action",
+  "postgres_dump_restore": "passed including tested binary originals",
+  "typescript_build": "passed",
+  "browser_verification": "not performed; local browser access disabled",
+  "powershell_installer": "passed; every existing application table compared with checked backup, including pending/replayed/dismissed decisions, sensor events and snapshot provenance; payload hashes match",
+  "installed_archive_workflow": "passed on upgraded prior-release fixture: exact uploaded original downloaded, 1 original included in successful recovery, 6 legacy records explicit, prior reports unchanged",
+  "scope": "New uploads only; legacy originals not manufactured. No production capacity, OCR, parser isolation, off-device archive or industrial approval claims."
+}

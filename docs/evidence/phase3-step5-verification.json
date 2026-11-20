@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-02",
+  "phase": 3,
+  "step": 5,
+  "schema_revision": "0006",
+  "sqlite_tests": 125,
+  "postgresql_tests": 125,
+  "postgresql_version": "18.6",
+  "runtime_superuser": false,
+  "typescript_build": "passed",
+  "migration_and_metadata": "passed",
+  "postgres_dump_restore": "passed; actual quarantine rows, events, readings and projection rows preserved",
+  "browser_verification": "not performed; local browser access disabled",
+  "powershell_installer": "passed; every existing application table compared with checked backup, including sensor events and snapshot provenance; payload hashes match",
+  "scope": "Local source and isolated test databases. Installed application unchanged. Bounded opt-in intake; no broker or production acceptance."
+}

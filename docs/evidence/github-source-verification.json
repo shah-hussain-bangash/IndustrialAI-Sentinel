@@ -1,0 +1,20 @@
+{
+  "verified_on": "2026-11-20",
+  "source": "installed Sentinel source, copied into a separate publication folder",
+  "sqlite_backend_tests": {
+    "passed": 172,
+    "warnings": 1,
+    "note": "Existing Starlette/httpx deprecation warning. Fresh isolated pytest directory used after default temporary-folder permission errors."
+  },
+  "frontend_build": "passed; TypeScript and Vite production build",
+  "secret_signature_checks": "passed; targeted private-key, GitHub token, AWS access key and gateway plaintext-token signatures",
+  "runtime_data_exclusion": "verified through tracked inventory and git check-ignore",
+  "application_backend_changes": "none",
+  "publication_changes": [
+    "GitHub quick-start README",
+    "expanded ignore rules",
+    "read-only CI permissions",
+    "Windows paste helper included under scripts/"
+  ],
+  "scope": "Source publication only. No public application deployment or production certification."
+}
