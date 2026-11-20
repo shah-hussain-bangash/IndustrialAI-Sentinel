@@ -4853,3 +4853,8 @@ textarea:focus {
 .team-confirm { margin: 24px 0; }
 .team-actions { display: flex; gap: 12px; justify-content: flex-end; }
 @media(max-width:760px) { .team-metrics,.team-form-grid { grid-template-columns: 1fr; } .team-panel { padding: 18px; } }
+.team-panel .team-form-grid .team-field-error { color: #a3212b; font-weight: 600; font-size: 15px; }
+.team-panel .team-form-grid input[aria-invalid="true"] { border: 2px solid #b42332; background: #fff8f8; }
+.team-panel .team-sites > label, .team-panel .team-confirm { display: flex; flex-direction: row; justify-content: flex-start; text-align: left; gap: 12px; }
+.team-panel .team-sites input[type="checkbox"], .team-panel .team-confirm input[type="checkbox"] { width: 20px; height: 20px; margin: 0; flex: 0 0 20px; }
+.team-panel .error-banner { margin: 16px 0; }

@@ -179,6 +179,29 @@ let csrf = "";
 export function setCsrf(value: string) {
   csrf = value;
 }
+export class ApiError extends Error {
+  readonly fields: Record<string, string>;
+  constructor(message: string, fields: Record<string, string> = {}) {
+    super(message);
+    this.name = "ApiError";
+    this.fields = fields;
+  }
+}
+
+export function validationMessage(detail: unknown) {
+  const fields: Record<string, string> = {};
+  if (Array.isArray(detail)) {
+    for (const issue of detail) {
+      if (!issue || typeof issue.msg !== "string" || !Array.isArray(issue.loc)) continue;
+      const field = issue.loc.find((part: unknown) => typeof part === "string" && part !== "body");
+      if (typeof field === "string") fields[field] = issue.msg.replace(/^Value error,\s*/i, "");
+    }
+  }
+  return {
+    fields,
+    message: typeof detail === "string" ? detail : Object.entries(fields).map(([field, message]) => `${field.replace(/_/g, " ")}: ${message}`).join(" ") || "Please check the form fields and try again.",
+  };
+}
 export async function api<T>(
   path: string,
   options: RequestInit = {},
@@ -215,11 +238,8 @@ export async function api<T>(
       path !== "/auth/me"
     )
       window.dispatchEvent(new Event("session-expired"));
-    throw new Error(
-      typeof error.detail === "string"
-        ? error.detail
-        : "Please check the form fields and try again.",
-    );
+    const validation = validationMessage(error.detail);
+    throw new ApiError(validation.message, validation.fields);
   }
   return response.json() as Promise<T>;
 }
