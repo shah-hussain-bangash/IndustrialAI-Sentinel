@@ -9,6 +9,7 @@ import type {
   Operations,
 } from "./api";
 export type Page =
+  | "team"
   | "overview"
   | "assets"
   | "monitor"

@@ -43,7 +43,7 @@ def current_user(request: Request, db: Session = Depends(get_db)):
     if not session or session.expires <= now():
         raise HTTPException(401, "Your session has expired. Please sign in again.")
     user = db.get(User, session.user_id)
-    if not user:
+    if not user or user.role == 'disabled':
         raise HTTPException(401, "Session user is unavailable.")
     canonicalize_user(user, db)
     if request.method not in ("GET", "HEAD", "OPTIONS"):

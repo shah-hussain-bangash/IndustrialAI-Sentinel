@@ -5,6 +5,11 @@ export const headerImages: Record<
   Page,
   { file: string; position: string; caption: string }
 > = {
+  team: {
+    file: "refinery-twilight",
+    position: "center 60%",
+    caption: "Connected industrial operations",
+  },
   organization: {
     file: "refinery-modern",
     position: "center 62%",

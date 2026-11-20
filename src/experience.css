@@ -4825,3 +4825,31 @@ textarea:focus {
     font-size: 22px;
   }
 }
+/* Company team administration: readable labels and explicit access review. */
+.team-workspace { display: grid; gap: 24px; }
+.team-panel { padding: 26px; }
+.team-panel h2 { margin: 0 0 10px; font-size: 22px; }
+.team-panel p { line-height: 1.6; }
+.team-metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+.team-metrics .panel { padding: 24px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.team-metrics strong { font-size: 30px; color: #0b1a31; }
+.team-metrics span { flex-basis: 100%; font-size: 16px; }
+.team-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.team-search { display: grid; gap: 8px; max-width: 440px; margin: 20px 0; }
+.team-explanation { padding: 14px 18px; background: #f5f7fa; border-left: 3px solid #b88b16; color: #24384f; }
+.team-table { overflow-x: auto; }
+.team-table table { width: 100%; border-collapse: collapse; }
+.team-table th, .team-table td { text-align: left; padding: 18px 14px; border-bottom: 1px solid #dce3eb; font-size: 16px; vertical-align: top; }
+.team-table th { background: #f5f7fa; }
+.team-table small { display: block; margin-top: 6px; font-size: 14px; overflow-wrap: anywhere; }
+.team-active, .team-disabled { display: inline-block; padding: 5px 10px; border-radius: 5px; background: #edf6f1; color: #1c6144; text-transform: capitalize; }
+.team-disabled { background: #fbeeee; color: #982b31; }
+.team-form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 22px; margin: 22px 0; }
+.team-form-grid label { display: grid; gap: 9px; font-size: 16px; align-content: start; }
+.team-form-grid small { font-size: 14px; line-height: 1.6; }
+.team-sites { border: 1px solid #cbd5e1; padding: 20px; border-radius: 10px; display: grid; gap: 14px; }
+.team-sites label, .team-confirm { display: flex; gap: 12px; align-items: center; font-size: 16px; line-height: 1.6; }
+.team-sites input, .team-confirm input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: #a77d10; }
+.team-confirm { margin: 24px 0; }
+.team-actions { display: flex; gap: 12px; justify-content: flex-end; }
+@media(max-width:760px) { .team-metrics,.team-form-grid { grid-template-columns: 1fr; } .team-panel { padding: 18px; } }

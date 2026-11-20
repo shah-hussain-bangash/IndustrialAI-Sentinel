@@ -50,6 +50,7 @@ from .originals import create_original_router, original_metadata, filename as or
 from .gateways import create_gateway_router
 from fastapi.exceptions import RequestValidationError
 from .foundation import create_foundation_router
+from .team import create_team_router
 from .sites import create_site_router
 
 
@@ -468,7 +469,7 @@ def demo_accounts(db: Session = Depends(get_db)):
         "accounts": [
             user_json(canonicalize_user(u, db))
             for u in db.scalars(select(User).order_by(User.email))
-            if password_valid(DEMO_PASSWORD, u.password_hash)
+            if u.role != 'disabled' and password_valid(DEMO_PASSWORD, u.password_hash)
         ],
     }
 
@@ -483,7 +484,7 @@ def login(body: Login, request: Request, response: Response, db: Session = Depen
         raise HTTPException(429, "Too many sign-in attempts. Wait a minute before retrying.")
     attempts.append(t)
     user = db.scalar(select(User).where(User.email == body.email.lower().strip()))
-    if not user or not password_valid(body.password, user.password_hash):
+    if not user or user.role == 'disabled' or not password_valid(body.password, user.password_hash):
         raise HTTPException(401, "Email or password is incorrect.")
     token = secrets.token_urlsafe(36)
     csrf = secrets.token_urlsafe(24)
@@ -1429,6 +1430,7 @@ app.include_router(create_original_router())
 app.include_router(create_gateway_router(accessible_assets, asset_for, idempotent, finish))
 app.include_router(create_site_router())
 app.include_router(create_foundation_router(idempotent, finish, asset_for))
+app.include_router(create_team_router())
 
 DIST = Path(__file__).resolve().parents[1] / "dist"
 if DIST.exists():

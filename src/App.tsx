@@ -50,6 +50,7 @@ import { LoginScreen, LoginChoices } from "./components/Login";
 import type { Data, Page } from "./types";
 import { headerImages } from "./lib/headerImages";
 import { OrganizationPage } from "./pages/OrganizationPage";
+import { TeamPage } from "./pages/TeamPage";
 import { ProductionPage } from "./pages/ProductionPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { AssetsPage } from "./pages/AssetsPage";
@@ -115,6 +116,9 @@ const pages: { id: Page; label: string; icon: LucideIcon; group: string }[] = [
     group: "OPERATIONS",
   },
   {
+    id: "team", label: "Team & access", icon: ShieldCheck, group: "OPERATIONS",
+  },
+  {
     id: "activity",
     label: "Activity & audit",
     icon: GitBranch,
@@ -134,6 +138,7 @@ const pages: { id: Page; label: string; icon: LucideIcon; group: string }[] = [
   },
 ];
 const titles: Record<Page, string> = {
+  team: "Team & access",
   organization: "Organization & sites",
   production: "Production workspace",
   overview: "Operations overview",
@@ -148,6 +153,7 @@ const titles: Record<Page, string> = {
   settings: "Workspace settings",
 };
 const descriptions: Record<Page, string> = {
+  team: "Bring your team together with clear roles and controlled site access.",
   organization: "Manage your company profile, sites and equipment hierarchy.",
   production:
     "Explore platform modules, review workflows and prepare the path to a production pilot.",
@@ -763,6 +769,7 @@ export default function App() {
                   selectSite={setSite}
                 />
               )}
+              {page === "team" && <TeamPage user={user} />}
               {page === "production" && (
                 <ProductionPage data={data} navigate={navigate} />
               )}
