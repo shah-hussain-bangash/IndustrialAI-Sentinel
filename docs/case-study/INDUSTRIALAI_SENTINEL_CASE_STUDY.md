@@ -48,9 +48,9 @@ These are proposed outcome measures. Reduced downtime, fewer failures, lower mai
 6. A planner creates a work order under the active approval and dispatches it to the local simulator.
 7. An uncertain response is reconciled against the existing simulated command. A technician then records actual findings to complete the order.
 
-![Recorded synthetic operations dashboard](https://raw.githubusercontent.com/zenithdevelopers7-source/IndustrialAI-Sentinel/8c52a8a8ef78457a1f218638ab2bf6f27a1907a5/docs/screenshots/overview.jpg)
+![Updated IndustrialAI Sentinel operations dashboard](assets/industrialai-current-dashboard.png)
 
-*Existing repository screenshot of a synthetic demonstration workspace. Its displayed readings, asset counts and earlier interface state are illustrative records, not a current live-plant observation or proof of full acceptance for the pinned revision.*
+*Updated interface captured from the running local demonstration workspace on 21 November 2026. This view shows the current navigation, operations brief and illustrative infrastructure photograph. Displayed counts and readings are demonstration data; the freshness notice explicitly identifies assets awaiting fresh readings. The screenshot illustrates the local interface and does not extend the source-baseline verification claims in this case study.*
 
 ## 3. Solution architecture
 
