@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="940" viewBox="0 0 1440 940" role="img" aria-labelledby="title desc">
+<title id="title">IndustrialAI Sentinel monitoring and maintenance architecture</title>
+<desc id="desc">Validated four-channel telemetry is explicitly aligned before analytics, procedure evidence and independent review support a maintenance work order. Maximum channel spread is five seconds. The recorded model evaluation uses four hundred synthetic holdout observations. Current hosted frontend build and eight UI checks passed, while backend initialization was blocked by a missing qrcode dependency.</desc>
+<defs>
+ <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#10202a"/><stop offset="1" stop-color="#24443f"/></linearGradient>
+ <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#91bdb2" stroke-width="1.5"/></marker>
+ <style>text{font-family:Segoe UI,Arial,sans-serif}.label{fill:#9ebdb5;font-size:16px;font-weight:600;letter-spacing:2px}.body{fill:#c1d5cf;font-size:18px}.node{fill:#254039;stroke:#567d71;stroke-width:1.5}.title{fill:#f0f7f3;font-weight:600;font-size:23px}.small{fill:#b5ccc4;font-size:16px}.line{fill:none;stroke:#91bdb2;stroke-width:2;marker-end:url(#arrow)}</style>
+</defs>
+<rect width="1440" height="940" rx="24" fill="url(#bg)"/>
+<rect x="56" y="53" width="60" height="5" rx="2" fill="#d7b66c"/>
+<text x="56" y="95" class="label">INDUSTRIAL MONITORING AND MAINTENANCE / CASE STUDY</text>
+<text x="52" y="170" fill="#f0f6f1" font-size="60" font-weight="700">IndustrialAI Sentinel</text>
+<text x="56" y="220" fill="#d3e1db" font-size="27">From measurement integrity to independently reviewed maintenance.</text>
+<rect x="1070" y="67" width="315" height="43" rx="21" fill="#384333" stroke="#828666"/>
+<text x="1227" y="95" text-anchor="middle" fill="#e7d49c" font-size="16" font-weight="600">LOCAL REFERENCE / SYNTHETIC DATA</text>
+<line x1="56" y1="263" x2="1384" y2="263" stroke="#426456"/>
+<text x="56" y="307" class="label">EVIDENCE BEFORE MAINTENANCE ACTION</text>
+<rect x="56" y="335" width="280" height="132" rx="14" class="node"/>
+<text x="78" y="375" class="title">01  Validated telemetry</text>
+<text x="78" y="411" class="body">Identity, units, time and quality</text>
+<text x="78" y="439" class="body">Reviewed four-channel frame</text>
+<path d="M341 400H391" class="line"/>
+<rect x="398" y="335" width="280" height="132" rx="14" class="node"/>
+<text x="420" y="375" class="title">02  Condition evidence</text>
+<text x="420" y="411" class="body">Heuristic and anomaly signals</text>
+<text x="420" y="439" class="body">Cited procedures and gaps</text>
+<path d="M683 400H733" class="line"/>
+<rect x="740" y="335" width="280" height="132" rx="14" fill="#494933" stroke="#8f9363" stroke-width="1.5"/>
+<text x="762" y="375" class="title">03  Independent review</text>
+<text x="762" y="411" class="body">Version, hash and expiry</text>
+<text x="762" y="439" class="body">Draft edits invalidate approval</text>
+<path d="M1025 400H1075" class="line"/>
+<rect x="1082" y="335" width="302" height="132" rx="14" class="node"/>
+<text x="1104" y="375" class="title">04  Controlled work</text>
+<text x="1104" y="411" class="body">Plan, dispatch and reconcile</text>
+<text x="1104" y="439" class="body">Record actual inspection findings</text>
+<rect x="56" y="491" width="1328" height="89" rx="12" fill="#182f2f" stroke="#4f7767"/>
+<text x="80" y="525" fill="#d7c78e" font-size="19" font-weight="600">KEEP THE MEANINGS DISTINCT</text>
+<text x="80" y="555" class="body">Condition index ≠ failure probability · Anomaly ≠ physical diagnosis · Local CMMS simulator ≠ plant control</text>
+<text x="56" y="631" class="label">SOURCE AND RECORDED EVIDENCE · 8c52a8a · REVIEWED 21 NOVEMBER 2026</text>
+<rect x="56" y="654" width="422" height="130" rx="14" fill="#2a493f"/>
+<text x="80" y="706" fill="#f0f8f3" font-size="40" font-weight="700">4 sensor channels</text>
+<text x="80" y="747" class="body">Vibration · temperature · pressure · flow</text>
+<rect x="509" y="654" width="422" height="130" rx="14" fill="#2a493f"/>
+<text x="533" y="706" fill="#f0f8f3" font-size="40" font-weight="700">5-second window</text>
+<text x="533" y="747" class="body">Maximum spread; other checks also apply</text>
+<rect x="962" y="654" width="422" height="130" rx="14" fill="#2a493f"/>
+<text x="986" y="706" fill="#f0f8f3" font-size="40" font-weight="700">400 holdout rows</text>
+<text x="986" y="747" class="body">Recorded synthetic model evaluation</text>
+<text x="56" y="830" fill="#e6cb86" font-size="18" font-weight="600">CURRENT CI: frontend build + 8 UI checks passed; backend initialization blocked by missing qrcode.</text>
+<text x="56" y="863" class="small">Recorded model F1 0.939 is synthetic only. Live plant data, physical diagnosis, RUL and industrial accuracy are unverified.</text>
+<text x="56" y="896" class="small">Vendor CMMS, enterprise identity, durable delivery and cloud operational acceptance remain separate work.</text>
+<text x="1384" y="921" text-anchor="end" fill="#a6c4b6" font-size="15">SHAH HUSSAIN BANGASH</text>
+</svg>

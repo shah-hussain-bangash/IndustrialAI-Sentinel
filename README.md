@@ -2,6 +2,8 @@
 
 A runnable local application for equipment condition monitoring, document evidence, independent maintenance review and work-order tracking. The React interface and FastAPI backend are connected; actions save to a real database.
 
+**Featured case study:** [IndustrialAI Sentinel Case Study — equipment monitoring and controlled maintenance](docs/case-study/INDUSTRIALAI_SENTINEL_CASE_STUDY.md). Explore telemetry integrity, anomaly evaluation, independent review, work-order reconciliation, security, recovery and the current verification/release gaps.
+
 **Start here:** this package includes both the complete source and a prebuilt `dist/` interface. No AI key, cloud account, MQTT broker or PostgreSQL server is needed for the default demonstration.
 
 ![Operations dashboard](docs/screenshots/overview.jpg)
