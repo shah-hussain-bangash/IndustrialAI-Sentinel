@@ -1,4 +1,5 @@
 export interface User {
+  mfa_setup_required?: boolean;
   site_ids?: string[];
   id: string;
   name: string;
@@ -6,6 +7,7 @@ export interface User {
   role: string;
   sites: string[];
 }
+export type LoginResponse = {user:User;csrf:string;mfa_required?:false} | {mfa_required:true;challenge_csrf:string;message:string};
 export interface Reading {
   fingerprint?: string;
   timestamp: number;

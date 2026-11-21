@@ -52,6 +52,8 @@ from fastapi.exceptions import RequestValidationError
 from .foundation import create_foundation_router
 from .team import create_team_router
 from .accounts import create_account_router
+from .mfa import create_mfa_router,login_challenge
+from .mfa_core import required as mfa_required
 from .sites import create_site_router
 
 
@@ -74,6 +76,8 @@ async def lifespan(app):
         raise RuntimeError("Organization hierarchy upgrade required. Stop Sentinel and run scripts/upgrade_database.py before restarting.")
     if existing.has_table("assets") and not existing.has_table("account_links"):
         raise RuntimeError("Account email upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
+    if existing.has_table("assets") and not existing.has_table("mfa_credentials"):
+        raise RuntimeError("Administrator MFA upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     initialize()
     if not inspect(engine).has_table("account_links"):
         raise RuntimeError("Account email upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
@@ -334,6 +338,7 @@ def user_json(user):
         "role": user.role,
         "sites": user.sites,
         "site_ids": getattr(user, "_site_ids", []),
+        "mfa_setup_required": bool(getattr(user,"_mfa_setup_required",False)),
     }
 
 
@@ -491,6 +496,10 @@ def login(body: Login, request: Request, response: Response, db: Session = Depen
     user = db.scalar(select(User).where(User.email == body.email.lower().strip()))
     if not user or user.role in ('disabled', 'invited') or not password_valid(body.password, user.password_hash):
         raise HTTPException(401, "Email or password is incorrect.")
+    credential = db.get(MfaCredential,user.id)
+    if credential and credential.enabled:
+        return login_challenge(db,user,request,response)
+    user._mfa_setup_required = user.role=='admin' and mfa_required(db)
     token = secrets.token_urlsafe(36)
     csrf = secrets.token_urlsafe(24)
     previous = request.cookies.get(COOKIE)
@@ -1437,6 +1446,7 @@ app.include_router(create_site_router())
 app.include_router(create_foundation_router(idempotent, finish, asset_for))
 app.include_router(create_team_router())
 app.include_router(create_account_router())
+app.include_router(create_mfa_router(user_json))
 
 DIST = Path(__file__).resolve().parents[1] / "dist"
 if DIST.exists():

@@ -14,7 +14,7 @@ def historical_metadata(revision):
     metadata=MetaData()
     try:
         with memory.connect() as connection:
-            for name in ("0001_initial_reference_application_schema.py","0002_sensor_registry.py","0003_site_identities.py","0004_sensor_events.py","0005_snapshot_projections.py","0006_sensor_quarantine.py","0007_document_originals.py","0008_telemetry_gateways.py","0009_organization_hierarchy.py"):
+            for name in ("0001_initial_reference_application_schema.py","0002_sensor_registry.py","0003_site_identities.py","0004_sensor_events.py","0005_snapshot_projections.py","0006_sensor_quarantine.py","0007_document_originals.py","0008_telemetry_gateways.py","0009_organization_hierarchy.py","0010_account_email_links.py"):
                 spec=importlib.util.spec_from_file_location("historical_"+name[:4],root/name)
                 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
                 with Operations.context(MigrationContext.configure(connection)):

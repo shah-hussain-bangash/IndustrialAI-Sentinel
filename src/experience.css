@@ -4867,3 +4867,18 @@ textarea:focus {
 .login-forgot-button { margin-top: 14px; }
 .account-email-panel form { border-top: 1px solid #dbe2eb; margin-top: 20px; }
 .account-email-panel .team-sites > label { display:flex; flex-direction:row; justify-content:flex-start; gap:12px; }
+
+.mfa-signin form,.mfa-form { display:grid; gap:20px; }
+.mfa-signin label,.mfa-form > label { display:grid; gap:9px; font-size:16px; }
+.admin-mfa-panel { grid-column: 1 / -1; }
+.admin-mfa-panel h2 { font-size:24px; }
+.admin-mfa-panel p { font-size:16px; line-height:1.65; }
+.mfa-status,.mfa-note { padding:18px; background:#f4f6fa; border-left:3px solid #ad851e; margin:20px 0; }
+.mfa-actions { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0; }
+.mfa-private { padding:20px; background:white; border:1px solid #cbd5e1; border-radius:10px; margin:20px 0; }
+.mfa-private code { font-size:16px; overflow-wrap:anywhere; user-select:all; }
+.mfa-private ul { padding-left:24px; display:grid; gap:10px; }
+.mfa-qr { display:block; width:260px; height:260px; max-width:100%; background:white; margin:15px 0; }
+.mfa-check,.mfa-form > .mfa-check { display:flex; flex-direction:row; gap:12px; align-items:flex-start; font-size:16px; line-height:1.6; }
+.mfa-check input[type=checkbox] { width:20px; height:20px; flex:0 0 20px; margin:4px 0; accent-color:#987014; }
+.mfa-gate { max-width:1000px; margin:40px auto; padding:24px; }

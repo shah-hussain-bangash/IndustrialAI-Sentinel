@@ -22,6 +22,7 @@ import type { Run } from "../types";
 import { GatewayPanel } from "../components/GatewayPanel";
 import { RecoveryPanel } from "../components/RecoveryPanel";
 import { SiteDirectory } from "../components/SiteDirectory";
+import { AdminMfaPanel } from "../components/AdminMfaPanel";
 export function SettingsPage({
   user,
   operations,
@@ -41,6 +42,7 @@ export function SettingsPage({
 }) {
   const [section, setSection] = useState("workspace");
   const sections = [
+    ...(user.role==='admin'?[{id:'security',label:'Administrator MFA'}]:[]),
     { id: "workspace", label: "Workspace" },
     { id: "telemetry", label: "Telemetry access" },
     { id: "sites", label: "Site directory" },
@@ -100,6 +102,7 @@ export function SettingsPage({
         </span>
       </div>
       <div className="settings-grid">
+        {section==='security'&&user.role==='admin'&&<AdminMfaPanel onRemoved={onPasswordChanged}/>}
         <section
           className="panel settings-card"
           hidden={section !== "workspace"}

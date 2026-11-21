@@ -48,6 +48,7 @@ import {
 import { initials, Badge, Button, Spinner, Modal } from "./components/ui";
 import { LoginScreen, LoginChoices } from "./components/Login";
 import { AccountLinkScreen } from "./components/AccountRecovery";
+import { AdminMfaPanel } from "./components/AdminMfaPanel";
 import type { Data, Page } from "./types";
 import { headerImages } from "./lib/headerImages";
 import { OrganizationPage } from "./pages/OrganizationPage";
@@ -401,6 +402,7 @@ export default function App() {
         {toastNode}
       </>
     );
+  if(user.mfa_setup_required)return <main className="mfa-gate"><h1>Secure your administrator account</h1><p>Company policy requires authenticator enrollment before you can access the workspace.</p><AdminMfaPanel onRemoved={()=>setUser(null)} onComplete={()=>window.location.reload()}/><Button onClick={logout}>Sign out</Button></main>;
   const current = pages.find((p) => p.id === page)!;
   const searchAssets = search
     ? data?.assets

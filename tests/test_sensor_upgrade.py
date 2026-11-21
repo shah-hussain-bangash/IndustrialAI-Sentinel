@@ -40,7 +40,7 @@ def test_versioned_legacy_upgrade_preserves_data_backfills_and_repeats(tmp_path)
     with sqlite3.connect(path) as db:
         ids=db.execute("SELECT id FROM sensors ORDER BY id").fetchall()
         assert len(ids)==len(before["assets"])*4
-        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0010"
+        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0011"
     run(env,"scripts/upgrade_sensor_registry.py")
     with sqlite3.connect(path) as db:
         assert db.execute("SELECT id FROM sensors ORDER BY id").fetchall()==ids
@@ -65,7 +65,7 @@ def test_fresh_database_and_already_created_registry_are_supported(tmp_path):
     with sqlite3.connect(path) as db: db.execute("DROP TABLE alembic_version")
     run(env,"scripts/upgrade_sensor_registry.py")
     with sqlite3.connect(path) as db:
-        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0010"
+        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0011"
 
 
 def test_schema_drift_is_rejected_without_migration(tmp_path):

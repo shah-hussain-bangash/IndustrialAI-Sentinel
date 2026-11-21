@@ -4,7 +4,7 @@ import secrets
 import os
 from fastapi import HTTPException, Request, Depends
 from sqlalchemy.orm import Session
-from .database import SessionLocal, LoginSession, User, Site, SiteMembership, now
+from .database import SessionLocal, LoginSession, User, Site, SiteMembership, MfaCredential, now
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import set_committed_value
 
@@ -46,6 +46,13 @@ def current_user(request: Request, db: Session = Depends(get_db)):
     if not user or user.role in ('disabled', 'invited'):
         raise HTTPException(401, "Session user is unavailable.")
     canonicalize_user(user, db)
+    from .mfa_core import required
+    credential = db.get(MfaCredential,user.id)
+    if credential and credential.enabled and not session.mfa_verified:
+        raise HTTPException(401,'Authenticator verification is required. Sign in again.')
+    user._mfa_setup_required = user.role == 'admin' and required(db) and not (credential and credential.enabled)
+    if user._mfa_setup_required and request.url.path not in ('/api/auth/me','/api/auth/logout','/api/auth/password') and not request.url.path.startswith('/api/auth/mfa/'):
+        raise HTTPException(428,'Administrator MFA enrollment is required before accessing workspace data.')
     if request.method not in ("GET", "HEAD", "OPTIONS"):
         if not hmac.compare_digest(request.headers.get("X-CSRF-Token", ""), session.csrf):
             raise HTTPException(
@@ -53,6 +60,7 @@ def current_user(request: Request, db: Session = Depends(get_db)):
             )
     request.state.user = user
     request.state.csrf = session.csrf
+    request.state.session = session
     return user
 
 

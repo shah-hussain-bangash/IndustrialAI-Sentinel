@@ -131,6 +131,11 @@ def create_team_router():
         if not member:
             raise HTTPException(404, 'Team member not found.')
         db.refresh(member)
+        if body.role == 'admin':
+            from .mfa_core import required
+            from .security import DEMO_PASSWORD,password_valid
+            if required(db) and password_valid(DEMO_PASSWORD,member.password_hash):
+                raise HTTPException(409,'This person must set a personal password before administrator access can be granted under the MFA policy.')
         if member.role == 'invited' and body.role != 'disabled':
             raise HTTPException(409, 'Pending accounts must accept their invitation before role changes. You may disable this invitation instead.')
         before = serialize(db, member)

@@ -15,10 +15,11 @@ import {
   EyeOff,
   LockKeyhole,
 } from "lucide-react";
-import { api, post, human, type User } from "../api";
+import { api, post, human, type User, type LoginResponse } from "../api";
 
 import { Button } from "./ui";
 import { ForgotPassword } from "./AccountRecovery";
+import { MfaSignIn } from "./MfaSignIn";
 const roleIcons = {
   admin: Settings2,
   approver: UserCheck,
@@ -33,6 +34,7 @@ export function LoginChoices({
   onLogin: (u: User, csrf: string) => void;
   showHeading?: boolean;
 }) {
+  const [challenge,setChallenge]=useState('');
   const [demo, setDemo] = useState<{
       enabled: boolean;
       password: string;
@@ -53,17 +55,19 @@ export function LoginChoices({
     setBusy(u.id);
     setError("");
     try {
-      const r = await post<{ user: User; csrf: string }>("/auth/login", {
+      const r = await post<LoginResponse>("/auth/login", {
         email: u.email,
         password: demo!.password,
       });
-      onLogin(r.user, r.csrf);
+      if(r.mfa_required)setChallenge(r.challenge_csrf);
+      else onLogin(r.user, r.csrf);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy("");
     }
   }
+  if(challenge)return <MfaSignIn csrf={challenge} onLogin={onLogin} onCancel={()=>setChallenge('')}/>;
   return (
     <section
       className={showHeading ? "demo-login-options" : "login-role-picker"}
@@ -143,6 +147,7 @@ export function LoginScreen({
 }: {
   onLogin: (u: User, csrf: string) => void;
 }) {
+  const [challenge,setChallenge]=useState('');
   const [forgot, setForgot] = useState(false);
   const [email, setEmail] = useState("engineer@sentinel.local"),
     [password, setPassword] = useState(""),
@@ -154,11 +159,12 @@ export function LoginScreen({
     setBusy(true);
     setError("");
     try {
-      const r = await post<{ user: User; csrf: string }>("/auth/login", {
+      const r = await post<LoginResponse>("/auth/login", {
         email,
         password,
       });
-      onLogin(r.user, r.csrf);
+      if(r.mfa_required)setChallenge(r.challenge_csrf);
+      else onLogin(r.user, r.csrf);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -220,7 +226,7 @@ export function LoginScreen({
           <h2>Welcome to Sentinel.</h2>
           <p>Your equipment intelligence workspace. Sign in to continue.</p>
           <div className="manual-login">
-            {forgot ? <ForgotPassword onBack={()=>setForgot(false)}/> : <><form onSubmit={submit}>
+            {challenge ? <MfaSignIn csrf={challenge} onLogin={onLogin} onCancel={()=>setChallenge('')}/> : forgot ? <ForgotPassword onBack={()=>setForgot(false)}/> : <><form onSubmit={submit}>
               <label>
                 Email address
                 <input

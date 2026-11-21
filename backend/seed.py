@@ -9,6 +9,7 @@ from sqlalchemy import select
 from .database import (
     Base,
     Organization,
+    MfaPolicy,
     engine,
     SessionLocal,
     User,
@@ -39,6 +40,8 @@ def initialize():
     if os.getenv("AUTO_CREATE_SCHEMA", "true").lower() == "true":
         Base.metadata.create_all(engine)
     with SessionLocal() as db:
+        if not db.get(MfaPolicy,"primary"):
+            db.add(MfaPolicy(id="primary",required=0,version=1));db.commit()
         if not db.get(Organization, "primary"):
             db.add(Organization(id="primary", name="Your organization", description="", configured=0, version=1))
             db.commit()

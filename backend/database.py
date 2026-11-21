@@ -141,6 +141,37 @@ class LoginSession(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     csrf: Mapped[str] = mapped_column(String(100))
     expires: Mapped[float] = mapped_column(Float)
+    mfa_verified: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+class MfaCredential(Base):
+    __tablename__ = "mfa_credentials"
+    __table_args__ = (CheckConstraint("enabled IN (0,1) AND version >= 1",name="ck_mfa_credential_state"),)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"),primary_key=True)
+    secret_encrypted: Mapped[str] = mapped_column(Text)
+    enabled: Mapped[int] = mapped_column(Integer,default=0)
+    enrollment_expires: Mapped[float] = mapped_column(Float)
+    last_step: Mapped[int] = mapped_column(Integer,default=-1)
+    recovery_hashes: Mapped[list] = mapped_column(JSON,default=list)
+    version: Mapped[int] = mapped_column(Integer,default=1)
+
+
+class MfaChallenge(Base):
+    __tablename__ = "mfa_challenges"
+    token_hash: Mapped[str] = mapped_column(String(64),primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"),index=True)
+    csrf: Mapped[str] = mapped_column(String(64))
+    account_version: Mapped[str] = mapped_column(String(64))
+    expires: Mapped[float] = mapped_column(Float)
+    attempts: Mapped[int] = mapped_column(Integer,default=0)
+
+
+class MfaPolicy(Base):
+    __tablename__ = "mfa_policy"
+    __table_args__ = (CheckConstraint("id = 'primary' AND required IN (0,1) AND version >= 1",name="ck_mfa_policy_state"),)
+    id: Mapped[str] = mapped_column(String(36),primary_key=True,default="primary")
+    required: Mapped[int] = mapped_column(Integer,default=0)
+    version: Mapped[int] = mapped_column(Integer,default=1)
 
 
 class AccountLink(Base):
