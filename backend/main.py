@@ -57,7 +57,7 @@ from .mfa_core import required as mfa_required
 from .sites import create_site_router
 from .condition_rules import create_condition_rule_router
 from .live_rules import create_live_rule_router, process_snapshot
-from .rule_reviews import create_rule_review_router
+from .rule_reviews import create_rule_review_router, create_rule_inbox_router
 
 
 @asynccontextmanager
@@ -1460,6 +1460,7 @@ app.include_router(create_mfa_router(user_json))
 app.include_router(create_condition_rule_router(asset_for, idempotent, finish))
 app.include_router(create_live_rule_router(asset_for, idempotent, finish))
 app.include_router(create_rule_review_router(asset_for, idempotent, finish))
+app.include_router(create_rule_inbox_router())
 
 DIST = Path(__file__).resolve().parents[1] / "dist"
 if DIST.exists():

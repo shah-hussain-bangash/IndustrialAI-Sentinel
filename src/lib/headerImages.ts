@@ -5,6 +5,11 @@ export const headerImages: Record<
   Page,
   { file: string; position: string; caption: string }
 > = {
+  conditions: {
+    file: "process-machinery",
+    position: "center 45%",
+    caption: "Industrial equipment review workspace",
+  },
   team: {
     file: "refinery-twilight",
     position: "center 60%",

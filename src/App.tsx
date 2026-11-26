@@ -62,6 +62,7 @@ import { KnowledgePage } from "./pages/KnowledgePage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { ActivityPage } from "./pages/ActivityPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { ConditionInboxPage } from "./pages/ConditionInboxPage";
 import { ReliabilityPage } from "./pages/ReliabilityPage";
 import { SensorsPage } from "./pages/SensorsPage";
 import { AssetDrawer } from "./components/dialogs/AssetDrawer";
@@ -93,6 +94,7 @@ const pages: { id: Page; label: string; icon: LucideIcon; group: string }[] = [
     icon: Sparkles,
     group: "INTELLIGENCE",
   },
+  { id: "conditions", label: "Condition inbox", icon: Bell, group: "INTELLIGENCE" },
   {
     id: "knowledge",
     label: "Knowledge base",
@@ -140,6 +142,7 @@ const pages: { id: Page; label: string; icon: LucideIcon; group: string }[] = [
   },
 ];
 const titles: Record<Page, string> = {
+  conditions: "Condition inbox",
   team: "Team & access",
   organization: "Organization & sites",
   production: "Production workspace",
@@ -155,6 +158,7 @@ const titles: Record<Page, string> = {
   settings: "Workspace settings",
 };
 const descriptions: Record<Page, string> = {
+  conditions: "Find equipment signals that need review, with clear ownership and history.",
   team: "Bring your team together with clear roles and controlled site access.",
   organization: "Manage your company profile, sites and equipment hierarchy.",
   production:
@@ -828,6 +832,7 @@ export default function App() {
                 />
               )}
               {page === "activity" && <ActivityPage events={data.activity} />}
+              {page === "conditions" && <ConditionInboxPage key={user.id} site={site} refreshKey={refreshKey} canReview={canOperate} />}
               {page === "sensors" && (
                 <SensorsPage
                   site={site}

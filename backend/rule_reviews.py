@@ -2,9 +2,9 @@
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func, and_, or_
 from sqlalchemy.orm import Session
-from .database import ConditionRuleReview, ConditionRuleMatch, ConditionRule, Audit, User
+from .database import ConditionRuleReview, ConditionRuleMatch, ConditionRule, ConditionRuleRevision, Asset, Audit, User
 from .security import allow, current_user, get_db
 
 
@@ -32,6 +32,43 @@ class ReviewCommand(BaseModel):
         if len(value) < 5 or any(ord(c) < 32 for c in value):
             raise ValueError("Provide a review note of at least five characters without control characters.")
         return value
+
+
+def create_rule_inbox_router():
+    router = APIRouter(prefix="/api/condition-rules", tags=["Condition inbox"])
+
+    @router.get("/inbox")
+    def inbox(review_state: Literal["unreviewed", "acknowledged", "resolved", "all"] = "unreviewed",
+              site: str | None = Query(default=None, max_length=100),
+              before_created: float | None = Query(default=None, ge=0, allow_inf_nan=False),
+              before_id: str | None = Query(default=None, min_length=1, max_length=36),
+              user: User = Depends(current_user), db: Session = Depends(get_db)):
+        allow(user, "engineer", "admin")
+        if site and site not in user.sites: raise HTTPException(403, "Site access is not permitted.")
+        if (before_created is None) != (before_id is None): raise HTTPException(422, "Provide both cursor values or neither.")
+        latest_state = select(ConditionRuleReview.state).where(ConditionRuleReview.match_id == ConditionRuleMatch.id).order_by(ConditionRuleReview.version.desc()).limit(1).scalar_subquery()
+        filters = [Asset.site.in_([site] if site else user.sites)]
+        if review_state != "all": filters.append(func.coalesce(latest_state, "unreviewed") == review_state)
+        count = db.scalar(select(func.count()).select_from(ConditionRuleMatch)
+                          .join(ConditionRule, ConditionRule.id == ConditionRuleMatch.rule_id)
+                          .join(Asset, Asset.id == ConditionRule.asset_id).where(*filters))
+        query = select(ConditionRuleMatch, ConditionRuleRevision, Asset).join(ConditionRule, ConditionRule.id == ConditionRuleMatch.rule_id)
+        query = query.join(Asset, Asset.id == ConditionRule.asset_id).join(ConditionRuleRevision,
+                  (ConditionRuleRevision.rule_id == ConditionRuleMatch.rule_id) & (ConditionRuleRevision.version == ConditionRuleMatch.rule_version)).where(*filters)
+        if before_id is not None:
+            query = query.where(or_(ConditionRuleMatch.created < before_created,
+                                    and_(ConditionRuleMatch.created == before_created, ConditionRuleMatch.id < before_id)))
+        rows = list(db.execute(query.order_by(ConditionRuleMatch.created.desc(), ConditionRuleMatch.id.desc()).limit(51)))
+        items = [{"id": match.id, "name": revision.name, "rule_version": match.rule_version,
+                  "asset_tag": asset.tag, "asset_name": asset.name, "site": asset.site,
+                  "signal_state": match.state, "triggered_at": match.triggered_at, "ended_at": match.ended_at,
+                  "created": match.created, "review": review_json(current_review(db, match.id))}
+                 for match, revision, asset in rows[:50]]
+        return {"items": items, "total_matching": count,
+                "next_cursor": {"before_created": rows[49][0].created, "before_id": rows[49][0].id} if len(rows) > 50 else None,
+                "boundary": "Local rule matches for permitted equipment. Signal state describes the last processed snapshot. This inbox sends no email or external notifications."}
+
+    return router
 
 
 def create_rule_review_router(asset_for, idempotent, finish):

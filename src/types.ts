@@ -10,6 +10,7 @@ import type {
 } from "./api";
 export type Page =
   | "team"
+  | "conditions"
   | "overview"
   | "assets"
   | "monitor"
