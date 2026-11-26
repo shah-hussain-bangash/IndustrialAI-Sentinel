@@ -4251,6 +4251,29 @@ textarea:focus {
   border-radius: 5px;
   padding: 3px 7px;
 }
+.production-phase-work {
+  margin: 18px 0;
+}
+.production-phase-work h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #0b1a31;
+}
+.production-phase-work ul {
+  margin: 0;
+  padding-left: 19px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #4b5870;
+}
+.production-phase-work li + li {
+  margin-top: 7px;
+}
+.production-phase-grid p.production-phase-verification {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #4b5870;
+}
 .production-phase-grid footer {
   display: flex;
   align-items: flex-start;

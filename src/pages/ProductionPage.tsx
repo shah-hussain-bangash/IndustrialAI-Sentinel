@@ -16,6 +16,7 @@ import {
   developmentPhases,
   deploymentOptions,
 } from "../lib/productionPlan";
+import { developmentReviewedOn, phaseStatusLabels } from "../lib/developmentStatus";
 import { Button } from "../components/ui";
 export function ProductionPage({
   data,
@@ -52,16 +53,16 @@ export function ProductionPage({
       <section className="production-hero">
         <div>
           <span className="production-eyebrow">
-            PRODUCT DESIGN / IMPLEMENTATION PLAN
+            DEVELOPMENT / IMPLEMENTATION MAP
           </span>
           <h2>One connected operating journey.</h2>
           <p>
-            Prepare the complete platform around the workflows your team needs.
+            Review delivered local workflows and the work still needed for a controlled pilot.
           </p>
           <div className="production-status">
             <Layers size={17} />
-            <strong>UI preparation</strong>
-            <span>Production readiness has not been assessed.</span>
+            <strong>Local workflows available</strong>
+            <span>Pilot and production acceptance pending.</span>
           </div>
         </div>
         <div className="production-hero-summary">
@@ -76,10 +77,7 @@ export function ProductionPage({
       <div className="production-notice">
         <ShieldCheck size={21} />
         <p>
-          <strong>Design workspace.</strong> New module specifications, roadmap
-          and launch criteria are available for review. They do not connect
-          equipment, configure external services or establish production
-          readiness.
+          <strong>Development snapshot · {developmentReviewedOn}.</strong> Review implemented local capabilities, remaining scope and acceptance requirements. This map records development progress; deployment-specific launch evidence is still required.
         </p>
       </div>
       <section
@@ -218,9 +216,7 @@ export function ProductionPage({
                 <h3>{m.name}</h3>
                 <p>{m.purpose}</p>
                 <span className="production-module-status">
-                  {m.route
-                    ? "Reference workflow + planned expansion"
-                    : "Planned capability"}
+                  {m.availability || (m.route ? "Local workflow + planned expansion" : "Planned capability")}
                 </span>
                 <span className="production-module-bottom">
                   Review scope & screens
@@ -332,29 +328,34 @@ export function ProductionPage({
             <div>
               <h2>Development roadmap</h2>
               <p>
-                Advance when acceptance evidence is available. No phase is
-                marked production-complete.
+                Reviewed {developmentReviewedOn}. Local development progress and remaining acceptance work are listed for each phase.
               </p>
             </div>
           </div>
           <div className="production-phase-grid">
-            {developmentPhases.map(([name, scope, gate], i) => (
-              <article key={name}>
+            {developmentPhases.map((phase, i) => (
+              <article key={phase.id}>
                 <div>
                   <span>Phase {i + 1}</span>
                   <span className="production-phase-state">
-                    {i === 1
-                      ? "UI preparation"
-                      : "Planned / verification required"}
+                    {phaseStatusLabels[phase.status]}
                   </span>
                 </div>
-                <h3>{name}</h3>
-                <p>{scope}</p>
+                <h3>{phase.name}</h3>
+                <p>{phase.scope}</p>
+                {phase.delivered.length > 0 && <section className="production-phase-work"><h4>Implemented locally</h4><ul>
+                  {phase.delivered.map(item => <li key={item}>{item}</li>)}
+                </ul></section>}
+                <section className="production-phase-work"><h4>Remaining work</h4><ul>
+                  {phase.remaining.map(item => <li key={item}>{item}</li>)}
+                </ul></section>
+                <p className="production-phase-verification">{phase.verification}</p>
+                {phase.route && <Button onClick={() => navigate(phase.route!)}>Open local workflow</Button>}
                 <footer>
                   <CheckCircle2 size={19} />
                   <span>
-                    <strong>Completion requirement</strong>
-                    {gate}
+                    <strong>Acceptance requirement</strong>
+                    {phase.gate}
                   </span>
                 </footer>
               </article>
@@ -368,8 +369,7 @@ export function ProductionPage({
             <div>
               <h2>Production launch requirements</h2>
               <p>
-                These controls need implementation and evidence, beyond
-                interface design.
+                Review environment-specific implementation and acceptance evidence for each launch area.
               </p>
             </div>
           </div>
