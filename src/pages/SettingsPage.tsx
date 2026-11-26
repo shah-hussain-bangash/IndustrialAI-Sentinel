@@ -23,6 +23,7 @@ import { GatewayPanel } from "../components/GatewayPanel";
 import { RecoveryPanel } from "../components/RecoveryPanel";
 import { SiteDirectory } from "../components/SiteDirectory";
 import { AdminMfaPanel } from "../components/AdminMfaPanel";
+import { ConditionRulePreview } from "../components/ConditionRulePreview";
 export function SettingsPage({
   user,
   operations,
@@ -45,6 +46,7 @@ export function SettingsPage({
     ...(user.role==='admin'?[{id:'security',label:'Administrator MFA'}]:[]),
     { id: "workspace", label: "Workspace" },
     { id: "telemetry", label: "Telemetry access" },
+    ...(["admin", "engineer"].includes(user.role) ? [{ id: "rules", label: "Condition rules" }] : []),
     { id: "sites", label: "Site directory" },
     { id: "recovery", label: "Backup & recovery" },
     { id: "account", label: "Account & password" },
@@ -102,6 +104,7 @@ export function SettingsPage({
         </span>
       </div>
       <div className="settings-grid">
+        {section === "rules" && ["admin", "engineer"].includes(user.role) && <ConditionRulePreview />}
         {section==='security'&&user.role==='admin'&&<AdminMfaPanel onRemoved={onPasswordChanged}/>}
         <section
           className="panel settings-card"
