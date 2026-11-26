@@ -1,0 +1,11 @@
+# Investigation status in Condition inbox
+
+The inbox now shows the linked investigation's current title, version and workflow status, with an Open investigation button. This live summary is separate from captured condition-origin evidence. It does not rewrite the historical snapshot, review status, ownership or rule activation. Not started means no link exists. Inconsistent cross-equipment links show Link unavailable and disclose no investigation identity or title.
+
+Investigation status filters are All investigations, Not started, Awaiting review, Approved · current, Approval needs review, Returned for revision, Work order planned and Link unavailable. Filters combine with current review state, ownership and canonical site permissions before count and cursor pagination. GET /api/condition-rules/inbox accepts investigation_state. The existing 50-row keyset pagination remains in place.
+
+Approved · current requires the approved state, an approval hash matching the current payload hash, and an approval deadline at or beyond the request's captured clock. Expired, absent or outdated approval on an approved record is shown under Approval needs review. Approval validity is an observation at refresh time, not an ongoing authorization; the work-order API independently checks it again at submission. Planning a work order changes the existing investigation state to dispatched; the inbox labels that Work order planned, since vendor submission and physical maintenance are separate later steps.
+
+Summary reads perform no writes, decisions, notifications or maintenance dispatch. Open investigation uses the existing permission-checked #intelligence/{UUID} route. Engineers and administrators retain the same inbox access boundaries; this increment adds no account permissions.
+
+No database migration is needed. Schema remains 0016. Source/build installation includes file backups and a stopped-server schema check. Automated verification covers live workflow transitions, approval expiry, pagination after filtering, combined permissions, inconsistent links, read-only behavior and labels that distinguish planning from dispatch. Broader production readiness and off-device recovery backups remain separate work.
