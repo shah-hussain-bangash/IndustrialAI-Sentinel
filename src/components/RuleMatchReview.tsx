@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, post } from "../api";
 import { Button } from "./ui";
+import { RuleMatchEvidence } from "./RuleMatchEvidence";
 type Review = { state: string; version: number; reason: string | null; actor_name: string | null; created: number | null };
 type History = { current: Review; signal_state: string; items: Review[] };
 
@@ -33,6 +34,7 @@ export function RuleMatchReview({ matchId, onBusy, onSaved }: {
     finally { setBusy(false); onBusy(false); }
   }
   return <section style={{ marginTop: 20 }}>
+    <RuleMatchEvidence key={matchId} matchId={matchId} />
     <h3>Match review</h3><p>Match: {matchId}</p>
     <p>Review notes describe your assessment. They do not confirm a fault, equipment repair or work-order completion.</p>
     <Button disabled={busy} onClick={async () => {
