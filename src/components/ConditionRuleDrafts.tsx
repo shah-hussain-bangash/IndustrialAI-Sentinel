@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, post } from "../api";
 import { Button } from "./ui";
+import { LiveRulePanel } from "./LiveRulePanel";
 
 export type RuleSettings = { asset_id: string; channel: "vibration" | "temperature" | "pressure" | "flow";
   threshold: number; hysteresis: number; persistence_seconds: number; maximum_gap_seconds: number };
@@ -9,8 +10,8 @@ type Draft = Revision & { id: string; active: false; state: "draft" };
 type History = { items: Revision[]; next_before_version: number | null };
 function date(value: number) { return new Date(value * 1000).toLocaleString("en-GB", { timeZone: "Asia/Dubai" }) + " GST"; }
 
-export function ConditionRuleDrafts({ settings, valid, locked, onLoad, onBusy }: {
-  settings: RuleSettings; valid: boolean; locked: boolean; onLoad: (settings: RuleSettings) => void; onBusy: (busy: boolean) => void;
+export function ConditionRuleDrafts({ settings, valid, locked, isAdmin, onLoad, onBusy }: {
+  settings: RuleSettings; valid: boolean; locked: boolean; isAdmin: boolean; onLoad: (settings: RuleSettings) => void; onBusy: (busy: boolean) => void;
 }) {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [selected, setSelected] = useState<Draft | null>(null);
@@ -68,7 +69,7 @@ export function ConditionRuleDrafts({ settings, valid, locked, onLoad, onBusy }:
     {truncated && <p>Showing the latest 100 drafts for this equipment.</p>}
     <div className="table-scroll"><table className="data-table">
       <thead><tr><th>Name</th><th>Version / state</th><th>Updated by</th><th>Action</th></tr></thead>
-      <tbody>{drafts.map(draft => <tr key={draft.id}><td>{draft.name}</td><td>{draft.version} · Inactive draft</td><td>{draft.actor_name}<small>{date(draft.created)}</small></td><td><Button type="button" disabled={busy} onClick={() => load(draft)}>Load draft</Button></td></tr>)}</tbody>
+      <tbody>{drafts.map(draft => <tr key={draft.id}><td>{draft.name}</td><td>{draft.version} · Saved draft</td><td>{draft.actor_name}<small>{date(draft.created)}</small></td><td><Button type="button" disabled={busy} onClick={() => load(draft)}>Load draft</Button></td></tr>)}</tbody>
     </table></div>
     {!loading && !drafts.length && <p>No saved drafts for this equipment.</p>}
     <Button type="button" disabled={busy} onClick={async () => {
@@ -97,5 +98,6 @@ export function ConditionRuleDrafts({ settings, valid, locked, onLoad, onBusy }:
       </details>)}
       {history.next_before_version !== null && <Button disabled={busy} onClick={viewHistory}>Older revisions</Button>}
     </div>}
+    {selected && <LiveRulePanel key={selected.id + ":" + selected.version} ruleId={selected.id} draftVersion={selected.version} draftSettings={selected.settings} assetId={settings.asset_id} isAdmin={isAdmin} onBusy={value => { setBusy(value); onBusy(value); }} />}
   </section></fieldset>;
 }

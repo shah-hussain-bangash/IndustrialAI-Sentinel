@@ -15,7 +15,7 @@ function stamp(value: number | null) {
   return value === null ? "—" : new Date(value * 1000).toLocaleString("en-GB", { timeZone: "Asia/Dubai" }) + " GST";
 }
 
-export function ConditionRulePreview() {
+export function ConditionRulePreview({ isAdmin }: { isAdmin: boolean }) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [assetId, setAssetId] = useState("");
   const [channel, setChannel] = useState<keyof typeof channels>("vibration");
@@ -54,7 +54,7 @@ export function ConditionRulePreview() {
   return <section className="panel settings-card full-span">
     <h2>Condition rule preview</h2>
     <p>Try a high-limit rule against stored equipment snapshots before deciding how it should behave.</p>
-    <div className="local-note">Preview does not save or activate a rule. Use Saved rule drafts below to retain settings. All saved drafts remain inactive.</div>
+    <div className="local-note">Preview does not save or activate a rule. Saving creates a draft. Administrators can explicitly activate a saved revision under Controlled activation.</div>
     {loading && <p role="status">Loading permitted equipment…</p>}
     <form onSubmit={preview}>
       <fieldset disabled={busy || loading || draftBusy} style={{ border: 0, padding: 0, margin: "16px 0" }}>
@@ -90,7 +90,7 @@ export function ConditionRulePreview() {
         <tbody>{result.windows.map((w, i) => <tr key={i}><td>{stamp(w.started_at)}</td><td>{stamp(w.triggered_at)}</td><td>{stamp(w.ended_at)}</td><td>{({ cleared: "Cleared", data_gap: "Data gap", invalid_sample: "Invalid sample", end_of_history: "End of available history" })[w.end_reason] || w.end_reason}</td></tr>)}</tbody>
       </table></div>}
     </div>}
-    {assetId && <ConditionRuleDrafts key={assetId} settings={settings} valid={valid && !busy} locked={busy} onBusy={setDraftBusy} onLoad={value => {
+    {assetId && <ConditionRuleDrafts key={assetId} settings={settings} valid={valid && !busy} locked={busy} isAdmin={isAdmin} onBusy={setDraftBusy} onLoad={value => {
       changed(); setChannel(value.channel); setThreshold(String(value.threshold)); setHysteresis(String(value.hysteresis));
       setPersistence(String(value.persistence_seconds)); setGap(String(value.maximum_gap_seconds));
     }} />}

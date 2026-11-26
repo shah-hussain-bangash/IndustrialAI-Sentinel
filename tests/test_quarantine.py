@@ -159,7 +159,7 @@ def test_revision5_to6_preserves_existing_tables(tmp_path):
         before={t:db.execute(f'SELECT * FROM "{t}" ORDER BY 1').fetchall() for t in tables}
     run(env,"scripts/upgrade_database.py")
     with sqlite3.connect(path) as db:
-        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0012"
+        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0013"
         for t,rows in before.items():assert db.execute(f'SELECT * FROM "{t}" ORDER BY 1').fetchall()==rows
         assert not db.execute("PRAGMA foreign_key_check").fetchall()
     run(env,"-m","alembic","check")

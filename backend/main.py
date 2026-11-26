@@ -56,6 +56,7 @@ from .mfa import create_mfa_router,login_challenge
 from .mfa_core import required as mfa_required
 from .sites import create_site_router
 from .condition_rules import create_condition_rule_router
+from .live_rules import create_live_rule_router, process_snapshot
 
 
 @asynccontextmanager
@@ -81,6 +82,8 @@ async def lifespan(app):
         raise RuntimeError("Administrator MFA upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     if existing.has_table("assets") and not all(existing.has_table(t) for t in ("condition_rules", "condition_rule_revisions")):
         raise RuntimeError("Condition rule draft upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
+    if existing.has_table("assets") and not all(existing.has_table(t) for t in ("condition_rule_deployments", "condition_rule_matches")):
+        raise RuntimeError("Condition rule activation upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     initialize()
     if not inspect(engine).has_table("account_links"):
         raise RuntimeError("Account email upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
@@ -717,6 +720,7 @@ def episode_transition(
 
 
 def check_episode(db, a, r):
+    process_snapshot(db, a, r)
     c = condition(r, a.threshold)
     if c["status"] in ("warning", "critical"):
         open_episode = db.scalar(
@@ -760,7 +764,7 @@ def ingest(
         db.flush()
         accepted += 1
         newest = latest(db, a.id)
-        if newest.id == r.id and r.quality == "good":
+        if newest.id == r.id:
             check_episode(db, a, r)
     audit(
         db,
@@ -787,8 +791,7 @@ def tick(
     for a in accessible_assets(db, user):
         prev = latest(db, a.id)
         if not prev:
-            db.add(
-                Reading(
+            r = Reading(
                     asset_id=a.id,
                     timestamp=now(),
                     vibration=2.2,
@@ -796,7 +799,8 @@ def tick(
                     pressure=5.2,
                     flow=120.0,
                 )
-            )
+            db.add(r)
+            check_episode(db, a, r)
             continue
         vib = max(0.3, prev.vibration + rng.normal(0, 0.07))
         temp = prev.temperature + rng.normal(0, 0.25)
@@ -1451,6 +1455,7 @@ app.include_router(create_team_router())
 app.include_router(create_account_router())
 app.include_router(create_mfa_router(user_json))
 app.include_router(create_condition_rule_router(asset_for, idempotent, finish))
+app.include_router(create_live_rule_router(asset_for, idempotent, finish))
 
 DIST = Path(__file__).resolve().parents[1] / "dist"
 if DIST.exists():

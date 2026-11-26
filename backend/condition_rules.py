@@ -1,4 +1,4 @@
-"""Read-only rule previews on stored equipment snapshots; no alert activation."""
+"""Historical rule previews and versioned drafts. Activation is a separate router."""
 import math
 from typing import Literal
 
@@ -132,7 +132,7 @@ def create_condition_rule_router(asset_for, idempotent, finish):
         rows = list(db.scalars(select(ConditionRule).where(ConditionRule.asset_id == asset_id)
                                .order_by(ConditionRule.created.desc(), ConditionRule.id).limit(101)))
         return {"items": [describe(db, row) for row in rows[:100]], "truncated": len(rows) > 100,
-                "boundary": "Saved drafts are inactive. No alert evaluation or notifications are enabled."}
+                "boundary": "Saving a draft does not change activation. See the separate deployment state for the running revision."}
 
     @router.post("/drafts", status_code=201)
     def create(body: DraftCreate, request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):

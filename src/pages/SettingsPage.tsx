@@ -104,7 +104,7 @@ export function SettingsPage({
         </span>
       </div>
       <div className="settings-grid">
-        {section === "rules" && ["admin", "engineer"].includes(user.role) && <ConditionRulePreview />}
+        {section === "rules" && ["admin", "engineer"].includes(user.role) && <ConditionRulePreview isAdmin={user.role === "admin"} />}
         {section==='security'&&user.role==='admin'&&<AdminMfaPanel onRemoved={onPasswordChanged}/>}
         <section
           className="panel settings-card"

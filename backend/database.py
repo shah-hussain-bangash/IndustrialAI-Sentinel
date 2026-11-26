@@ -473,6 +473,40 @@ class ConditionRuleRevision(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class ConditionRuleDeployment(Base):
+    __tablename__ = "condition_rule_deployments"
+    __table_args__ = (
+        ForeignKeyConstraint(["rule_id", "rule_version"], ["condition_rule_revisions.rule_id", "condition_rule_revisions.version"]),
+        CheckConstraint("state IN ('active','paused') AND version >= 1 AND evaluation_version >= 1", name="ck_rule_deployment_state"),
+    )
+    rule_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    rule_version: Mapped[int] = mapped_column(Integer)
+    state: Mapped[str] = mapped_column(String(20))
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    evaluation_version: Mapped[int] = mapped_column(Integer, default=1)
+    activated_at: Mapped[float] = mapped_column(Float)
+    evaluated_at: Mapped[float | None] = mapped_column(Float, nullable=True)
+    last_timestamp: Mapped[float] = mapped_column(Float, default=0)
+    candidate_since: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+
+class ConditionRuleMatch(Base):
+    __tablename__ = "condition_rule_matches"
+    __table_args__ = (
+        ForeignKeyConstraint(["rule_id", "rule_version"], ["condition_rule_revisions.rule_id", "condition_rule_revisions.version"]),
+        CheckConstraint("state IN ('active','cleared','data_gap','invalid_sample','paused','replaced')", name="ck_rule_match_state"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    rule_id: Mapped[str] = mapped_column(String(36), index=True)
+    rule_version: Mapped[int] = mapped_column(Integer)
+    state: Mapped[str] = mapped_column(String(20))
+    started_at: Mapped[float] = mapped_column(Float)
+    triggered_at: Mapped[float] = mapped_column(Float)
+    ended_at: Mapped[float | None] = mapped_column(Float, nullable=True)
+    trigger_reading_id: Mapped[str] = mapped_column(ForeignKey("readings.id"))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
