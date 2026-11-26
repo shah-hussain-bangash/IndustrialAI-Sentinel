@@ -51,6 +51,7 @@ import { AccountLinkScreen } from "./components/AccountRecovery";
 import { AdminMfaPanel } from "./components/AdminMfaPanel";
 import type { Data, Page } from "./types";
 import { WorkspaceTool } from "./components/WorkspaceTool";
+import { AttentionPanel } from "./components/AttentionPanel";
 import { headerImages } from "./lib/headerImages";
 import { investigationIdFromHash } from "./lib/investigationRoute";
 const OrganizationPage = lazy(() => import("./pages/OrganizationPage").then(module => ({ default: module.OrganizationPage })));
@@ -220,6 +221,7 @@ export default function App() {
   const [notifications, setNotifications] = useState(false),
     [profile, setProfile] = useState(false),
     [switching, setSwitching] = useState(false);
+  useEffect(() => { setNotifications(false); }, [user?.id, user?.role, site]);
   const [prefs, setPrefs] = useState<Preferences>({
     compact: false,
     email_digest: false,
@@ -579,42 +581,17 @@ export default function App() {
               <button
                 className="icon-btn notification-btn"
                 aria-label="Notifications"
+                aria-expanded={notifications}
                 onClick={() => setNotifications(!notifications)}
               >
                 <Bell size={19} />
-                {!!data?.episodes.filter((e) => e.state !== "resolved")
-                  .length && <i />}
               </button>
               {notifications && (
-                <div className="popover notification-popover">
-                  <h4>Attention needed</h4>
-                  {data?.episodes
-                    .filter((e) => e.state !== "resolved")
-                    .slice(0, 4)
-                    .map((e) => (
-                      <button
-                        key={e.id}
-                        onClick={() => {
-                          setAssetId(e.asset_id);
-                          setNotifications(false);
-                        }}
-                      >
-                        <TriangleAlert size={16} />
-                        <span>
-                          <strong>{e.asset_tag}</strong>
-                          <small>{e.title}</small>
-                        </span>
-                      </button>
-                    ))}
-                  <button
-                    onClick={() => {
-                      navigate("monitor");
-                      setNotifications(false);
-                    }}
-                  >
-                    Open monitoring <ArrowRight size={14} />
-                  </button>
-                </div>
+                <AttentionPanel key={`${user.id}:${user.role}:${site}`} site={site} canReview={canOperate}
+                  episodes={!loading && !loadError && data ? data.episodes : null} close={() => setNotifications(false)}
+                  openConditions={() => { navigate("conditions"); setNotifications(false); }}
+                  openAsset={id => { setAssetId(id); setNotifications(false); }}
+                  openMonitor={() => { navigate("monitor"); setNotifications(false); }} />
               )}
             </div>
             <div className="popover-parent">

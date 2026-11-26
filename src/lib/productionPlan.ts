@@ -357,7 +357,7 @@ export const productModules: ProductModule[] = [
     purpose:
       "Deliver the right message and show whether it reached its destination.",
     roles: "Admin · All assigned users",
-    current: "Account invitation/recovery email and delivery status are implemented for configured local use. Condition-alert delivery, notification preferences, routing and escalation remain planned.",
+    current: "Account invitation/recovery email and delivery status are implemented for configured local use. The header attention panel checks unreviewed rule matches inside the portal. External condition-alert delivery, notification preferences, routing and escalation remain planned.",
     functions: [
       "Approved email or messaging delivery",
       "User preferences and routing",
