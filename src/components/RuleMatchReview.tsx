@@ -3,6 +3,7 @@ import { api, post } from "../api";
 import { Button } from "./ui";
 import { RuleMatchEvidence } from "./RuleMatchEvidence";
 import { RuleMatchOwnership } from "./RuleMatchOwnership";
+import { RuleMatchInvestigation } from "./RuleMatchInvestigation";
 type Review = { state: string; version: number; reason: string | null; actor_name: string | null; created: number | null };
 type History = { current: Review; signal_state: string; items: Review[] };
 
@@ -13,6 +14,7 @@ export function RuleMatchReview({ matchId, onBusy, onSaved }: {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [ownershipBusy, setOwnershipBusy] = useState(false);
+  const [investigationBusy, setInvestigationBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   useEffect(() => {
@@ -24,7 +26,7 @@ export function RuleMatchReview({ matchId, onBusy, onSaved }: {
   async function refresh() { setHistory(await api<History>(`/condition-rules/matches/${matchId}/reviews`)); }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!history || busy || ownershipBusy) return;
+    if (!history || busy || ownershipBusy || investigationBusy) return;
     const action = ((event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null)?.value;
     if (action !== "acknowledge" && action !== "resolve") return;
     setBusy(true); onBusy(true); setError(""); setMessage("");
@@ -37,10 +39,11 @@ export function RuleMatchReview({ matchId, onBusy, onSaved }: {
   }
   return <section style={{ marginTop: 20 }}>
     <RuleMatchEvidence key={matchId} matchId={matchId} />
-    <RuleMatchOwnership key={`owner-${matchId}`} matchId={matchId} reviewState={history?.current.state} locked={busy} onBusy={value => { setOwnershipBusy(value); onBusy(value); }} onSaved={onSaved} />
+    <RuleMatchOwnership key={`owner-${matchId}`} matchId={matchId} reviewState={history?.current.state} locked={busy || investigationBusy} onBusy={value => { setOwnershipBusy(value); onBusy(value); }} onSaved={onSaved} />
+    <RuleMatchInvestigation key={`investigation-${matchId}`} matchId={matchId} locked={busy || ownershipBusy} onBusy={value => { setInvestigationBusy(value); onBusy(value); }} onSaved={onSaved} />
     <h3>Match review</h3><p>Match: {matchId}</p>
     <p>Review notes describe your assessment. They do not confirm a fault, equipment repair or work-order completion.</p>
-    <Button disabled={busy || ownershipBusy} onClick={async () => {
+    <Button disabled={busy || ownershipBusy || investigationBusy} onClick={async () => {
       setBusy(true); onBusy(true); setError("");
       try { await refresh(); await onSaved(); } catch (e) { setError((e as Error).message); }
       finally { setBusy(false); onBusy(false); }
@@ -50,7 +53,7 @@ export function RuleMatchReview({ matchId, onBusy, onSaved }: {
     {error && <p role="alert" className="form-error">{error}</p>}
     {message && <p role="status">{message}</p>}
     {history && history.current.state !== "resolved" && <form onSubmit={submit}>
-      <fieldset disabled={busy || ownershipBusy} style={{ border: 0, padding: 0 }}>
+      <fieldset disabled={busy || ownershipBusy || investigationBusy} style={{ border: 0, padding: 0 }}>
         <label>Review note<textarea required minLength={5} maxLength={1000} value={reason} onChange={e => setReason(e.target.value)} /></label>
         <Button type="submit" className="primary" value="acknowledge" disabled={history.current.state !== "unreviewed"}>Acknowledge match</Button>
         <Button type="submit" value="resolve" disabled={history.current.state !== "acknowledged" || history.signal_state === "active"}>Resolve review</Button>

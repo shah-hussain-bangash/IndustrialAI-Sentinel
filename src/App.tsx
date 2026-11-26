@@ -51,6 +51,7 @@ import { AccountLinkScreen } from "./components/AccountRecovery";
 import { AdminMfaPanel } from "./components/AdminMfaPanel";
 import type { Data, Page } from "./types";
 import { headerImages } from "./lib/headerImages";
+import { investigationIdFromHash } from "./lib/investigationRoute";
 import { OrganizationPage } from "./pages/OrganizationPage";
 import { TeamPage } from "./pages/TeamPage";
 import { ProductionPage } from "./pages/ProductionPage";
@@ -213,7 +214,7 @@ export default function App() {
   const [newAsset, setNewAsset] = useState(false),
     [newInvestigation, setNewInvestigation] = useState(false),
     [uploadDoc, setUploadDoc] = useState(false);
-  const [investigationId, setInvestigationId] = useState<string | null>(null),
+  const [investigationId, setInvestigationId] = useState<string | null>(() => investigationIdFromHash(window.location.hash)),
     [orderId, setOrderId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(false),
     [profile, setProfile] = useState(false),
@@ -355,6 +356,9 @@ export default function App() {
       if (destination) {
         setPage(destination.id);
         setMobile(false);
+        const linkedId = investigationIdFromHash(window.location.hash);
+        setInvestigationId(linkedId);
+        if (linkedId) { setData(null); setSite(""); setRefreshKey(value => value + 1); }
       }
     };
     window.addEventListener("hashchange", changed);
@@ -946,12 +950,17 @@ export default function App() {
           }
         />
       )}
+      {investigationId && investigationIdFromHash(window.location.hash) === investigationId && data && !loading && !activeInv && (
+        <Modal title="Investigation unavailable" description="This record is missing or outside your current site access." onClose={() => { setInvestigationId(null); window.location.hash = "intelligence"; }}>
+          <p>Return to AI investigations to choose an available record.</p>
+        </Modal>
+      )}
       {activeInv && (
         <InvestigationModal
           inv={activeInv}
           user={user}
           busy={busy}
-          onClose={() => setInvestigationId(null)}
+          onClose={() => { setInvestigationId(null); if (investigationIdFromHash(window.location.hash)) window.location.hash = "intelligence"; }}
           openDoc={openDocument}
           run={run}
         />

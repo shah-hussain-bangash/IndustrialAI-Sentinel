@@ -26,6 +26,7 @@ import {
 } from "../../api";
 
 import { Badge, Button, Empty, Modal } from "../ui";
+import { ConditionInvestigationOrigin } from "../ConditionInvestigationOrigin";
 import type { Page, Run } from "../../types";
 export function InvestigationModal({
   inv,
@@ -97,6 +98,7 @@ export function InvestigationModal({
           {inv.payload.evidence.length} evidence sources
         </span>
       </div>
+      {inv.payload.condition_origin && <ConditionInvestigationOrigin origin={inv.payload.condition_origin} />}
       <div className="tabs modal-tabs">
         {[
           ["summary", "Findings & recommendation"],

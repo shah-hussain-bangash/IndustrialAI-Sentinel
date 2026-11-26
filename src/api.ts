@@ -62,6 +62,17 @@ export interface Evidence {
   score: number;
   kind: string;
 }
+export interface ConditionOrigin {
+  match_id: string;
+  asset: { tag: string; name: string; site: string };
+  rule: { id: string; version: number; name: string; settings: { channel: string; threshold: number; hysteresis: number; persistence_seconds: number; maximum_gap_seconds: number }; actor_name: string; created: number; reason: string };
+  match: { signal_state: string; started_at: number; triggered_at: number; ended_at: number | null };
+  snapshot: { id: string; timestamp: number; quality: string; signals: { channel: string; value: number | null; unit: string }[] };
+  analysis_snapshot: { id: string; timestamp: number; quality: string; signals: { channel: string; value: number | null; unit: string }[] };
+  prepared_at: number;
+  investigation_note: string;
+  boundary: string;
+}
 export interface Investigation {
   id: string;
   asset_id: string;
@@ -83,6 +94,7 @@ export interface Investigation {
     model_version: string;
     requires_approval: boolean;
     priority: string;
+    condition_origin?: ConditionOrigin;
   };
   creator: string;
   creator_id: string;

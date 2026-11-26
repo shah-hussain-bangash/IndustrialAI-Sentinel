@@ -535,6 +535,13 @@ class ConditionRuleAssignment(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class ConditionMatchInvestigation(Base):
+    __tablename__ = "condition_match_investigations"
+    match_id: Mapped[str] = mapped_column(ForeignKey("condition_rule_matches.id"), primary_key=True)
+    investigation_id: Mapped[str] = mapped_column(ForeignKey("investigations.id"), unique=True)
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)

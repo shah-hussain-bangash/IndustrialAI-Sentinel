@@ -36,6 +36,26 @@ class ReviewCommand(BaseModel):
         return value
 
 
+def match_evidence(db, match, asset):
+    revision = db.get(ConditionRuleRevision, (match.rule_id, match.rule_version))
+    reading = db.get(Reading, match.trigger_reading_id)
+    # A malformed cross-equipment reference must never disclose another site's snapshot.
+    if revision is None or reading is None or reading.asset_id != asset.id:
+        raise HTTPException(409, "The linked evidence is unavailable or inconsistent. Ask an administrator to check the record.")
+    units = {"vibration": "mm/s", "temperature": "°C", "pressure": "bar", "flow": "m³/h"}
+    values = {channel: getattr(reading, channel) for channel in units}
+    return {"match_id": match.id, "asset": {"tag": asset.tag, "name": asset.name, "site": asset.site},
+            "rule": {"id": match.rule_id, "version": revision.version, "name": revision.name,
+                     "settings": revision.settings, "actor_name": revision.actor_name,
+                     "created": revision.created, "reason": revision.reason},
+            "match": {"signal_state": match.state, "started_at": match.started_at,
+                      "triggered_at": match.triggered_at, "ended_at": match.ended_at},
+            "snapshot": {"id": reading.id, "timestamp": reading.timestamp, "quality": reading.quality,
+                         "signals": [{"channel": channel, "unit": units[channel],
+                                      "value": value if math.isfinite(value) else None} for channel, value in values.items()]},
+            "boundary": "Historical trigger snapshot and the saved rule revision used for this match. The snapshot alone does not prove the full persistence sequence or current equipment condition. Ingestion source is not established by this record."}
+
+
 def create_rule_inbox_router():
     router = APIRouter(prefix="/api/condition-rules", tags=["Condition inbox"])
 
@@ -92,23 +112,7 @@ def create_rule_review_router(asset_for, idempotent, finish):
     @router.get("/{match_id}/evidence")
     def evidence(match_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
         match, asset = match_for(db, user, match_id)
-        revision = db.get(ConditionRuleRevision, (match.rule_id, match.rule_version))
-        reading = db.get(Reading, match.trigger_reading_id)
-        # A malformed cross-equipment reference must never disclose another site's snapshot.
-        if revision is None or reading is None or reading.asset_id != asset.id:
-            raise HTTPException(409, "The linked evidence is unavailable or inconsistent. Ask an administrator to check the record.")
-        units = {"vibration": "mm/s", "temperature": "°C", "pressure": "bar", "flow": "m³/h"}
-        values = {channel: getattr(reading, channel) for channel in units}
-        return {"match_id": match.id, "asset": {"tag": asset.tag, "name": asset.name, "site": asset.site},
-                "rule": {"id": match.rule_id, "version": revision.version, "name": revision.name,
-                         "settings": revision.settings, "actor_name": revision.actor_name,
-                         "created": revision.created, "reason": revision.reason},
-                "match": {"signal_state": match.state, "started_at": match.started_at,
-                          "triggered_at": match.triggered_at, "ended_at": match.ended_at},
-                "snapshot": {"id": reading.id, "timestamp": reading.timestamp, "quality": reading.quality,
-                             "signals": [{"channel": channel, "unit": units[channel],
-                                          "value": value if math.isfinite(value) else None} for channel, value in values.items()]},
-                "boundary": "Historical trigger snapshot and the saved rule revision used for this match. The snapshot alone does not prove the full persistence sequence or current equipment condition. Ingestion source is not established by this record."}
+        return match_evidence(db, match, asset)
 
     @router.get("/{match_id}/reviews")
     def history(match_id: str, before_version: int | None = Query(default=None, ge=1),
