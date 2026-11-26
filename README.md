@@ -6,7 +6,32 @@ A runnable local application for equipment condition monitoring, document eviden
 
 **Start here:** this package includes both the complete source and a prebuilt `dist/` interface. No AI key, cloud account, MQTT broker or PostgreSQL server is needed for the default demonstration.
 
-![Operations dashboard](docs/screenshots/overview.jpg)
+![IndustrialAI Sentinel operations overview — current local interface](docs/screenshots/overview-2026-11.jpg)
+
+*Current interface, captured 26 November 2026. Screens show the local demonstration workspace with synthetic equipment data and illustrative industrial photography.*
+
+<details>
+<summary><strong>Latest screenshots — condition review, workspace attention and development roadmap</strong></summary>
+
+### Exact condition-match review
+
+Bookmarkable match pages bring together the saved rule revision, historical trigger evidence, review history and linked investigation. Opening a record does not approve or resolve it.
+
+![Exact condition-match review with saved revision and historical triggering evidence](docs/screenshots/condition-match-2026-11.jpg)
+
+### Workspace attention
+
+The notification bell checks unreviewed condition-rule matches and keeps demonstration episodes separate. This is an in-portal review queue; external condition-alert delivery and escalation remain planned.
+
+![Workspace attention showing separate condition-rule and demonstration-episode queues](docs/screenshots/workspace-attention-2026-11.jpg)
+
+### Development roadmap
+
+The ten-phase roadmap distinguishes implemented local workflows, remaining work and acceptance requirements. Real-site pilot and production rollout acceptance remain pending. See the [development status snapshot](docs/DEVELOPMENT_STATUS.md).
+
+![Development roadmap showing local implementation, remaining work and phase status](docs/screenshots/development-roadmap-2026-11.jpg)
+
+</details>
 
 ## Open in Cursor
 
