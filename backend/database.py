@@ -519,6 +519,22 @@ class ConditionRuleReview(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class ConditionRuleAssignment(Base):
+    __tablename__ = "condition_rule_assignments"
+    __table_args__ = (
+        CheckConstraint("version >= 1", name="ck_rule_assignment_version"),
+        CheckConstraint("(owner_id IS NULL AND owner_name IS NULL) OR (owner_id IS NOT NULL AND owner_name IS NOT NULL)", name="ck_rule_assignment_owner"),
+    )
+    match_id: Mapped[str] = mapped_column(ForeignKey("condition_rule_matches.id"), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    owner_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    actor_name: Mapped[str] = mapped_column(String(200))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)

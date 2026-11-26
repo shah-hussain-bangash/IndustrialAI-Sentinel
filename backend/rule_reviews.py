@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select, update, func, and_, or_
 from sqlalchemy.orm import Session
-from .database import ConditionRuleReview, ConditionRuleMatch, ConditionRule, ConditionRuleRevision, Asset, Audit, User, Reading
+from .database import ConditionRuleReview, ConditionRuleMatch, ConditionRule, ConditionRuleRevision, ConditionRuleAssignment, Asset, Audit, User, Reading
+from .rule_assignments import ownership_for
 from .security import allow, current_user, get_db
 
 
@@ -40,6 +41,7 @@ def create_rule_inbox_router():
 
     @router.get("/inbox")
     def inbox(review_state: Literal["unreviewed", "acknowledged", "resolved", "all"] = "unreviewed",
+              ownership: Literal["all", "mine", "unassigned"] = "all",
               site: str | None = Query(default=None, max_length=100),
               before_created: float | None = Query(default=None, ge=0, allow_inf_nan=False),
               before_id: str | None = Query(default=None, min_length=1, max_length=36),
@@ -49,6 +51,9 @@ def create_rule_inbox_router():
         if (before_created is None) != (before_id is None): raise HTTPException(422, "Provide both cursor values or neither.")
         latest_state = select(ConditionRuleReview.state).where(ConditionRuleReview.match_id == ConditionRuleMatch.id).order_by(ConditionRuleReview.version.desc()).limit(1).scalar_subquery()
         filters = [Asset.site.in_([site] if site else user.sites)]
+        latest_owner = select(ConditionRuleAssignment.owner_id).where(ConditionRuleAssignment.match_id == ConditionRuleMatch.id).order_by(ConditionRuleAssignment.version.desc()).limit(1).scalar_subquery()
+        if ownership == "mine": filters.append(latest_owner == user.id)
+        if ownership == "unassigned": filters.append(latest_owner.is_(None))
         if review_state != "all": filters.append(func.coalesce(latest_state, "unreviewed") == review_state)
         count = db.scalar(select(func.count()).select_from(ConditionRuleMatch)
                           .join(ConditionRule, ConditionRule.id == ConditionRuleMatch.rule_id)
@@ -65,6 +70,8 @@ def create_rule_inbox_router():
                   "signal_state": match.state, "triggered_at": match.triggered_at, "ended_at": match.ended_at,
                   "created": match.created, "review": review_json(current_review(db, match.id))}
                  for match, revision, asset in rows[:50]]
+        for item, (_, _, asset) in zip(items, rows[:50]):
+            item['ownership'] = ownership_for(db, item['id'], asset.site_id)
         return {"items": items, "total_matching": count,
                 "next_cursor": {"before_created": rows[49][0].created, "before_id": rows[49][0].id} if len(rows) > 50 else None,
                 "boundary": "Local rule matches for permitted equipment. Signal state describes the last processed snapshot. This inbox sends no email or external notifications."}

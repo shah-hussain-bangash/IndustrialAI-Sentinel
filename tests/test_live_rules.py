@@ -1,7 +1,7 @@
 import uuid
 import pytest
 from sqlalchemy import select, func, delete
-from backend.database import SessionLocal, ConditionRuleMatch, ConditionRuleDeployment, ConditionRuleRevision, ConditionRule, ConditionRuleReview, Asset, Reading, Sensor, Episode, Audit, now
+from backend.database import SessionLocal, ConditionRuleMatch, ConditionRuleDeployment, ConditionRuleRevision, ConditionRule, ConditionRuleReview, ConditionRuleAssignment, Asset, Reading, Sensor, Episode, Audit, now
 from backend.live_rules import process_snapshot
 
 
@@ -13,6 +13,7 @@ def cleanup_live_fixture():
         for asset in assets:
             ids = list(db.scalars(select(ConditionRule.id).where(ConditionRule.asset_id == asset.id)))
             match_ids = select(ConditionRuleMatch.id).where(ConditionRuleMatch.rule_id.in_(ids))
+            db.execute(delete(ConditionRuleAssignment).where(ConditionRuleAssignment.match_id.in_(match_ids)))
             db.execute(delete(ConditionRuleReview).where(ConditionRuleReview.match_id.in_(match_ids)))
             for model in (ConditionRuleMatch, ConditionRuleDeployment, ConditionRuleRevision):
                 db.execute(delete(model).where(model.rule_id.in_(ids)))

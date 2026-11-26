@@ -161,7 +161,7 @@ def test_revision7_to8_preserves_existing_rows_and_creates_no_credentials(tmp_pa
         before={t:db.execute(f'SELECT * FROM "{t}" ORDER BY 1').fetchall() for t in tables}
     run(env,"scripts/upgrade_database.py")
     with sqlite3.connect(path) as db:
-        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0014"
+        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0015"
         for t,rows in before.items():assert db.execute(f'SELECT * FROM "{t}" ORDER BY 1').fetchall()==rows
         assert db.execute("SELECT count(*) FROM telemetry_gateways").fetchone()[0]==0
     run(env,"-m","alembic","check")
