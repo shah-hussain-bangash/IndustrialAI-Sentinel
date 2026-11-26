@@ -2,8 +2,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { api, post } from "../api";
 import { Button } from "./ui";
 import type { RuleSettings } from "./ConditionRuleDrafts";
+import { RuleMatchReview } from "./RuleMatchReview";
 type Deployment = { state: string; version: number; rule_version: number | null; activated_at: number | null; last_evaluated_at: number | null; latest_rule_version: number };
-type Match = { id: string; name: string; rule_version: number; state: string; started_at: number; triggered_at: number; ended_at: number | null; trigger_reading_id: string };
+type Match = { id: string; name: string; rule_version: number; state: string; started_at: number; triggered_at: number; ended_at: number | null; trigger_reading_id: string; review: { state: string; version: number } };
 type Activity = { items: Match[]; truncated: boolean; boundary: string };
 const stamp = (t: number | null) => t ? new Date(t * 1000).toLocaleString("en-GB", { timeZone: "Asia/Dubai" }) + " GST" : "—";
 
@@ -17,6 +18,7 @@ export function LiveRulePanel({ ruleId, draftVersion, draftSettings, assetId, is
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [reviewMatch, setReviewMatch] = useState<string | null>(null);
   useEffect(() => {
     let current = true;
     Promise.all([api<Deployment>(`/condition-rules/drafts/${ruleId}/deployment`), api<Activity>(`/condition-rules/activity?asset_id=${encodeURIComponent(assetId)}`)])
@@ -68,8 +70,9 @@ export function LiveRulePanel({ ruleId, draftVersion, draftSettings, assetId, is
     <p>{activity?.boundary || "Loading rule matches…"}</p>
     {activity?.truncated && <p>Showing the latest 100 matches.</p>}
     {activity && !activity.items.length && <p>No rule matches recorded.</p>}
-    {!!activity?.items.length && <div className="table-scroll"><table className="data-table"><thead><tr><th>Rule / revision</th><th>State</th><th>Triggered</th><th>Ended</th></tr></thead><tbody>
-      {activity.items.map(m => <tr key={m.id}><td>{m.name} · {m.rule_version}<small>Reading: {m.trigger_reading_id}</small></td><td>{m.state.replaceAll("_", " ")}</td><td>{stamp(m.triggered_at)}</td><td>{stamp(m.ended_at)}</td></tr>)}
+    {!!activity?.items.length && <div className="table-scroll"><table className="data-table"><thead><tr><th>Rule / revision</th><th>Signal / review</th><th>Triggered</th><th>Ended</th><th>Action</th></tr></thead><tbody>
+      {activity.items.map(m => <tr key={m.id}><td>{m.name} · {m.rule_version}<small>Reading: {m.trigger_reading_id}</small></td><td>{m.state.replaceAll("_", " ")}<small>{m.review.state}</small></td><td>{stamp(m.triggered_at)}</td><td>{stamp(m.ended_at)}</td><td><Button disabled={busy} onClick={() => setReviewMatch(m.id)}>Review match</Button></td></tr>)}
     </tbody></table></div>}
+    {reviewMatch && <RuleMatchReview key={reviewMatch} matchId={reviewMatch} onBusy={value => { setBusy(value); onBusy(value); }} onSaved={refresh} />}
   </section>;
 }

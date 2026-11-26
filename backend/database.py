@@ -507,6 +507,18 @@ class ConditionRuleMatch(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class ConditionRuleReview(Base):
+    __tablename__ = "condition_rule_reviews"
+    __table_args__ = (CheckConstraint("version >= 1 AND state IN ('acknowledged','resolved')", name="ck_rule_review_state"),)
+    match_id: Mapped[str] = mapped_column(ForeignKey("condition_rule_matches.id"), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    state: Mapped[str] = mapped_column(String(20))
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    actor_name: Mapped[str] = mapped_column(String(200))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)

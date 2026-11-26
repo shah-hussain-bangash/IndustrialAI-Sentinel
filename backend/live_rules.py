@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from .database import ConditionRule, ConditionRuleRevision, ConditionRuleDeployment, ConditionRuleMatch, Reading, Audit, Asset, User, now
 from .security import allow, current_user, get_db
+from .rule_reviews import current_review, review_json
 
 
 def status_json(row):
@@ -158,7 +159,7 @@ def create_live_rule_router(asset_for, idempotent, finish):
                                .order_by(ConditionRuleMatch.created.desc(), ConditionRuleMatch.id).limit(101)))
         return {"items": [{"id": m.id, "name": revision.name, "rule_version": m.rule_version, "state": m.state,
                            "started_at": m.started_at, "triggered_at": m.triggered_at, "ended_at": m.ended_at,
-                           "trigger_reading_id": m.trigger_reading_id} for m, revision in rows[:100]],
+                           "trigger_reading_id": m.trigger_reading_id, "review": review_json(current_review(db, m.id))} for m, revision in rows[:100]],
                 "truncated": len(rows) > 100,
                 "boundary": "Snapshot-driven local matches only. An active match describes the last processed snapshot, not guaranteed current equipment condition. No email, external dispatch or maintenance action."}
 
