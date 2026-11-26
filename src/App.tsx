@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, lazy } from "react";
 import {
   Activity,
   ArrowRight,
@@ -50,22 +50,23 @@ import { LoginScreen, LoginChoices } from "./components/Login";
 import { AccountLinkScreen } from "./components/AccountRecovery";
 import { AdminMfaPanel } from "./components/AdminMfaPanel";
 import type { Data, Page } from "./types";
+import { WorkspaceTool } from "./components/WorkspaceTool";
 import { headerImages } from "./lib/headerImages";
 import { investigationIdFromHash } from "./lib/investigationRoute";
-import { OrganizationPage } from "./pages/OrganizationPage";
-import { TeamPage } from "./pages/TeamPage";
-import { ProductionPage } from "./pages/ProductionPage";
+const OrganizationPage = lazy(() => import("./pages/OrganizationPage").then(module => ({ default: module.OrganizationPage })));
+const TeamPage = lazy(() => import("./pages/TeamPage").then(module => ({ default: module.TeamPage })));
+const ProductionPage = lazy(() => import("./pages/ProductionPage").then(module => ({ default: module.ProductionPage })));
 import { OverviewPage } from "./pages/OverviewPage";
-import { AssetsPage } from "./pages/AssetsPage";
-import { MonitorPage } from "./pages/MonitorPage";
-import { IntelligencePage } from "./pages/IntelligencePage";
-import { KnowledgePage } from "./pages/KnowledgePage";
-import { OrdersPage } from "./pages/OrdersPage";
-import { ActivityPage } from "./pages/ActivityPage";
-import { SettingsPage } from "./pages/SettingsPage";
-import { ConditionInboxPage } from "./pages/ConditionInboxPage";
-import { ReliabilityPage } from "./pages/ReliabilityPage";
-import { SensorsPage } from "./pages/SensorsPage";
+const AssetsPage = lazy(() => import("./pages/AssetsPage").then(module => ({ default: module.AssetsPage })));
+const MonitorPage = lazy(() => import("./pages/MonitorPage").then(module => ({ default: module.MonitorPage })));
+const IntelligencePage = lazy(() => import("./pages/IntelligencePage").then(module => ({ default: module.IntelligencePage })));
+const KnowledgePage = lazy(() => import("./pages/KnowledgePage").then(module => ({ default: module.KnowledgePage })));
+const OrdersPage = lazy(() => import("./pages/OrdersPage").then(module => ({ default: module.OrdersPage })));
+const ActivityPage = lazy(() => import("./pages/ActivityPage").then(module => ({ default: module.ActivityPage })));
+const SettingsPage = lazy(() => import("./pages/SettingsPage").then(module => ({ default: module.SettingsPage })));
+const ConditionInboxPage = lazy(() => import("./pages/ConditionInboxPage").then(module => ({ default: module.ConditionInboxPage })));
+const ReliabilityPage = lazy(() => import("./pages/ReliabilityPage").then(module => ({ default: module.ReliabilityPage })));
+const SensorsPage = lazy(() => import("./pages/SensorsPage").then(module => ({ default: module.SensorsPage })));
 import { AssetDrawer } from "./components/dialogs/AssetDrawer";
 import { AssetForm } from "./components/dialogs/AssetForm";
 import { NewInvestigation } from "./components/dialogs/NewInvestigation";
@@ -776,7 +777,7 @@ export default function App() {
           {!data ? (
             <Spinner />
           ) : (
-            <>
+            <WorkspaceTool id={page}>
               {page === "organization" && (
                 <OrganizationPage
                   openAsset={setAssetId}
@@ -873,7 +874,7 @@ export default function App() {
                   switchAccount={() => setSwitching(true)}
                 />
               )}
-            </>
+            </WorkspaceTool>
           )}
           <footer className="workspace-footer">
             <span>

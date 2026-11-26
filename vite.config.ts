@@ -11,5 +11,5 @@ export default defineConfig({
       "/openapi.json": "http://127.0.0.1:8127",
     },
   },
-  build: { outDir: "dist" },
+  build: { outDir: "dist", manifest: true },
 });
