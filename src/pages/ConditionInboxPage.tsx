@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { Button } from "../components/ui";
-import { RuleMatchReview } from "../components/RuleMatchReview";
+import { ConditionMatchDetail } from "../components/ConditionMatchDetail";
 import { investigationStatusLabel } from "../lib/investigationStatus";
+import { conditionMatchHash } from "../lib/conditionMatchRoute";
 type Cursor = { before_created: number; before_id: string };
 type Match = { id: string; name: string; rule_version: number; asset_tag: string; asset_name: string; site: string;
   signal_state: string; triggered_at: number; ended_at: number | null; review: { state: string };
@@ -11,26 +12,27 @@ type Match = { id: string; name: string; rule_version: number; asset_tag: string
 type Inbox = { items: Match[]; total_matching: number; next_cursor: Cursor | null; boundary: string };
 const stamp = (t: number | null) => t === null ? "—" : new Date(t * 1000).toLocaleString("en-GB", { timeZone: "Asia/Dubai" }) + " GST";
 
-export function ConditionInboxPage({ site, refreshKey, canReview }: { site: string; refreshKey: number; canReview: boolean }) {
+export function ConditionInboxPage({ site, refreshKey, canReview, matchId = null }: { site: string; refreshKey: number; canReview: boolean; matchId?: string | null }) {
+  if (!canReview) return <section className="panel settings-card"><h2>Engineer or administrator access required</h2><p>Ask your administrator for the appropriate equipment-review role and site access.</p></section>;
+  return matchId ? <ConditionMatchDetail key={`${matchId}:${site}`} matchId={matchId} site={site} /> : <ConditionInboxList site={site} refreshKey={refreshKey} />;
+}
+
+function ConditionInboxList({ site, refreshKey }: { site: string; refreshKey: number }) {
   const [filter, setFilter] = useState("unreviewed");
   const [ownership, setOwnership] = useState("all");
   const [investigationState, setInvestigationState] = useState("all");
   const [data, setData] = useState<Inbox | null>(null);
-  const [selected, setSelected] = useState<Match | null>(null);
   const [busy, setBusy] = useState(false);
-  const [reviewBusy, setReviewBusy] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const [page, setPage] = useState(1);
   const generation = useRef(0);
-  const scope = `${site}\u0000${filter}\u0000${ownership}\u0000${investigationState}\u0000${canReview}`;
+  const scope = `${site}\u0000${filter}\u0000${ownership}\u0000${investigationState}`;
   const currentScope = useRef(scope);
   const loadedScope = useRef<string | null>(null);
   currentScope.current = scope;
   async function load(cursor: Cursor | null = null) {
     if (currentScope.current !== scope) return;
     const request = ++generation.current;
-    if (!canReview) return;
     setBusy(true); setError("");
     const params = new URLSearchParams({ review_state: filter, ownership, investigation_state: investigationState });
     if (site) params.set("site", site);
@@ -42,35 +44,33 @@ export function ConditionInboxPage({ site, refreshKey, canReview }: { site: stri
     finally { if (generation.current === request) setBusy(false); }
   }
   useEffect(() => {
-    // Refreshing data must not erase an open review or its unsaved note.
+    // Keep pagination and data tied to the current list filters.
     if (loadedScope.current !== scope) {
-      setSelected(null); setData(null); setMessage(""); loadedScope.current = scope;
+      setData(null); loadedScope.current = scope;
     }
-    if (!reviewBusy) void load();
+    void load();
     return () => { generation.current++; };
-  }, [site, filter, ownership, investigationState, refreshKey, canReview, reviewBusy]);
-  if (!canReview) return <section className="panel settings-card"><h2>Engineer or administrator access required</h2><p>Ask your administrator for the appropriate equipment-review role and site access.</p></section>;
+  }, [site, filter, ownership, investigationState, refreshKey]);
   return <section className="panel settings-card">
     <h2>Condition inbox</h2><p>Review local rule matches across your permitted equipment. Signal state and review progress are shown separately.</p>
     <div className="table-toolbar" style={{ flexWrap: "wrap", alignItems: "end" }}>
-      <label>Review status<select disabled={busy || reviewBusy} value={filter} onChange={e => setFilter(e.target.value)}>
+      <label>Review status<select disabled={busy} value={filter} onChange={e => setFilter(e.target.value)}>
         <option value="unreviewed">Unreviewed</option><option value="acknowledged">Acknowledged</option>
         <option value="resolved">Resolved</option><option value="all">All reviews</option>
       </select></label>
-      <label>Ownership<select disabled={busy || reviewBusy} value={ownership} onChange={e => setOwnership(e.target.value)}>
+      <label>Ownership<select disabled={busy} value={ownership} onChange={e => setOwnership(e.target.value)}>
         <option value="all">All owners</option><option value="mine">Assigned to me</option><option value="unassigned">Unassigned</option>
       </select></label>
-      <label>Investigation status<select disabled={busy || reviewBusy} value={investigationState} onChange={e => setInvestigationState(e.target.value)}>
+      <label>Investigation status<select disabled={busy} value={investigationState} onChange={e => setInvestigationState(e.target.value)}>
         <option value="all">All investigations</option><option value="not_started">Not started</option>
         <option value="awaiting_review">Awaiting review</option><option value="approved">Approved · current</option>
         <option value="approval_needed">Approval needs review</option><option value="rejected">Returned for revision</option>
         <option value="dispatched">Work order planned</option><option value="unavailable">Link unavailable</option>
       </select></label>
-      <Button disabled={busy || reviewBusy} onClick={() => { setMessage(""); void load(); }}>Refresh inbox</Button>
+      <Button disabled={busy} onClick={() => { void load(); }}>Refresh inbox</Button>
     </div>
     {busy && <p role="status">Loading matches…</p>}
     {error && <p role="alert" className="form-error">{error}</p>}
-    {message && <p role="status">{message}</p>}
     {data && <>
       <p>{data.total_matching} matching records · Page {page} · {data.items.length} shown</p>
       <div className="local-note">{data.boundary}</div>
@@ -82,17 +82,12 @@ export function ConditionInboxPage({ site, refreshKey, canReview }: { site: stri
           <td>{match.investigation ? <>{investigationStatusLabel(match.investigation.state, match.investigation.approval_current)}
             {match.investigation.id && <><small>{match.investigation.title} · Version {match.investigation.version}</small>
               {match.investigation.state === "approved" && <small>Approval until: {stamp(match.investigation.approved_until ?? null)}</small>}
-              <Button disabled={busy || reviewBusy} onClick={() => { window.location.hash = `intelligence/${match.investigation!.id}`; }}>Open investigation</Button></>}
+              <Button disabled={busy} onClick={() => { window.location.hash = `intelligence/${match.investigation!.id}`; }}>Open investigation</Button></>}
             {match.investigation.state === "unavailable" && <small>Ask an administrator to check the link.</small>}</> : "Not started"}</td>
-          <td>{stamp(match.triggered_at)}<small>Ended: {stamp(match.ended_at)}</small></td><td><Button disabled={busy || reviewBusy} onClick={() => { setSelected(match); setMessage(""); }}>Review match</Button></td></tr>)}
+          <td>{stamp(match.triggered_at)}<small>Ended: {stamp(match.ended_at)}</small></td><td><a className="btn" href={conditionMatchHash(match.id)}>Review match</a></td></tr>)}
       </tbody></table></div>}
-      <div className="toolbar-right"><Button disabled={busy || reviewBusy || page === 1} onClick={() => void load()}>Newest matches</Button>
-        <Button disabled={busy || reviewBusy || !data.next_cursor} onClick={() => { if (data.next_cursor) void load(data.next_cursor); }}>Older matches</Button></div>
+      <div className="toolbar-right"><Button disabled={busy || page === 1} onClick={() => void load()}>Newest matches</Button>
+        <Button disabled={busy || !data.next_cursor} onClick={() => { if (data.next_cursor) void load(data.next_cursor); }}>Older matches</Button></div>
     </>}
-    {selected && <section style={{ marginTop: 24 }}><h3>{selected.asset_tag} · {selected.name} · Revision {selected.rule_version}</h3><p>{selected.site}</p>
-      <RuleMatchReview key={selected.id} matchId={selected.id} onBusy={setReviewBusy} onSaved={async () => {
-        await load(); if (currentScope.current === scope) setMessage("Record saved. The inbox was refreshed; its filters may move the record out of this list.");
-      }} />
-    </section>}
   </section>;
 }

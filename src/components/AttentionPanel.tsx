@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, Bell, TriangleAlert, X } from "lucide-react";
 import { api, date, type Episode } from "../api";
+import { conditionMatchHash } from "../lib/conditionMatchRoute";
 
 type AttentionMatch = { id: string; asset_tag: string; site: string; name: string;
   rule_version: number; signal_state: string; triggered_at: number };
@@ -40,11 +41,12 @@ export function AttentionPanel({ site, canReview, episodes, openConditions, open
       {!busy && result && <>
         <p role="status"><strong>{result.total_matching}</strong> unreviewed rule matches</p>
         {result.total_matching === 0 && <p>No rule matches need initial review in this site scope.</p>}
-        {result.items.slice(0, 4).map(match => <div className="attention-match" key={match.id}>
+        {result.items.slice(0, 4).map(match => <a className="attention-match" key={match.id} href={conditionMatchHash(match.id)} onClick={close}>
           <Bell size={15} /><span><strong>{match.asset_tag} · {match.name}</strong>
             <small>{match.site} · Revision {match.rule_version}</small>
-            <small>Signal: {match.signal_state.replaceAll("_", " ")} · Triggered {date(match.triggered_at, true)} GST</small></span>
-        </div>)}
+            <small>Signal: {match.signal_state.replaceAll("_", " ")} · Triggered {date(match.triggered_at, true)} GST</small>
+            <small>Open this match <ArrowRight size={12} /></small></span>
+        </a>)}
         {result.total_matching > 4 && <p>Showing the four newest. Open the inbox for all matches.</p>}
         {checkedAt !== null && <p className="attention-note">Checked {date(checkedAt, true)} GST. Refresh to check again.</p>}
       </>}

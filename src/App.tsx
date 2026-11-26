@@ -54,6 +54,7 @@ import { WorkspaceTool } from "./components/WorkspaceTool";
 import { AttentionPanel } from "./components/AttentionPanel";
 import { headerImages } from "./lib/headerImages";
 import { investigationIdFromHash } from "./lib/investigationRoute";
+import { conditionMatchIdFromHash } from "./lib/conditionMatchRoute";
 const OrganizationPage = lazy(() => import("./pages/OrganizationPage").then(module => ({ default: module.OrganizationPage })));
 const TeamPage = lazy(() => import("./pages/TeamPage").then(module => ({ default: module.TeamPage })));
 const ProductionPage = lazy(() => import("./pages/ProductionPage").then(module => ({ default: module.ProductionPage })));
@@ -218,6 +219,7 @@ export default function App() {
     [uploadDoc, setUploadDoc] = useState(false);
   const [investigationId, setInvestigationId] = useState<string | null>(() => investigationIdFromHash(window.location.hash)),
     [orderId, setOrderId] = useState<string | null>(null);
+  const [conditionMatchId, setConditionMatchId] = useState<string | null>(() => conditionMatchIdFromHash(window.location.hash));
   const [notifications, setNotifications] = useState(false),
     [profile, setProfile] = useState(false),
     [switching, setSwitching] = useState(false);
@@ -360,8 +362,10 @@ export default function App() {
         setPage(destination.id);
         setMobile(false);
         const linkedId = investigationIdFromHash(window.location.hash);
+        const linkedMatchId = conditionMatchIdFromHash(window.location.hash);
+        setConditionMatchId(linkedMatchId);
         setInvestigationId(linkedId);
-        if (linkedId) { setData(null); setSite(""); setRefreshKey(value => value + 1); }
+        if (linkedId || linkedMatchId) { setData(null); setSite(""); setRefreshKey(value => value + 1); }
       }
     };
     window.addEventListener("hashchange", changed);
@@ -814,7 +818,7 @@ export default function App() {
                 />
               )}
               {page === "activity" && <ActivityPage events={data.activity} />}
-              {page === "conditions" && <ConditionInboxPage key={user.id} site={site} refreshKey={refreshKey} canReview={canOperate} />}
+              {page === "conditions" && <ConditionInboxPage key={user.id} site={site} refreshKey={refreshKey} canReview={canOperate} matchId={conditionMatchId} />}
               {page === "sensors" && (
                 <SensorsPage
                   site={site}

@@ -16,7 +16,7 @@ window.fetch = async input => {
   if (requestedMode === "error") return new Response(JSON.stringify({ detail: "Isolated connection failure" }), { status: 503 });
   const site = new URL(String(input), window.location.origin).searchParams.get("site") || "Fixture Site A";
   return new Response(JSON.stringify({ total_matching: requestedMode === "empty" ? 0 : 6,
-    items: requestedMode === "empty" ? [] : Array.from({ length: 6 }, (_, i) => ({ id: String(i), asset_tag: "TEST-" + i,
+    items: requestedMode === "empty" ? [] : Array.from({ length: 6 }, (_, i) => ({ id: `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`, asset_tag: "TEST-" + i,
       site, name: requestedMode === "waiting" ? "STALE RESULT MUST NOT APPEAR" : "Synthetic vibration rule",
       rule_version: 3, signal_state: i === 0 ? "paused" : "active", triggered_at: 1795650000 })) }), { status: 200 });
 };

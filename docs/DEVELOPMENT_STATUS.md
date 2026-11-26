@@ -16,7 +16,7 @@ Implementation evidence reviewed for this snapshot:
 | Maintenance reference flow | backend/main.py and work-order workflow tests; independent version-bound approval, planning, local simulator submission and reconciliation |
 | Local recovery and loading | backend/recovery.py; isolated restore verification; WorkspaceTool loading/recovery harness and startup dependency-graph checks |
 
-The header attention panel now checks unreviewed saved rule matches inside the portal and links to the permitted condition inbox. Demonstration episodes remain separate. The panel checks on open or explicit refresh; it is not a push or outbound delivery system.
+The header attention panel now checks unreviewed saved rule matches inside the portal and opens exact, bookmarkable match-review records within permitted site access. Demonstration episodes remain separate. The panel checks on open or explicit refresh; it is not a push or outbound delivery system.
 
 Work remaining includes approved external notification routing/delivery/retries/escalation and maintenance suppression; representative real-source integration and outage behavior; job/resource/parts and field/return-to-service evidence; a vendor CMMS connection; agreed downtime/reliability/report calculations; selected production identity, hosting, storage/retention and durable processing; monitoring, off-machine backups, recovery/load/security acceptance; named pilot owners, training and rollout sign-off. Optional deployment choices remain subject to agreed scope.
 

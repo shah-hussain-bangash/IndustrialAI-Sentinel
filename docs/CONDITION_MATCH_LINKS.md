@@ -1,0 +1,9 @@
+# Exact condition-match links — 26 November 2026
+
+Condition attention entries and inbox Review match links now open #conditions/{match UUID}. A bookmark identifies a saved match, not a position in a filtered page. Acknowledged and resolved records can therefore be reopened without changing the default inbox filters. Back to Condition inbox returns to its normal review list.
+
+The route parser accepts only one UUID, normalizes its case and rejects appended paths, queries and malformed identifiers. A valid link opens the condition workspace and resets the selected site to all permitted sites, as investigation links already do. This changes the display scope only; it grants no site access. Selecting another site while viewing a detail remounts and rechecks the match. The detail checks the existing evidence endpoint before mounting review, ownership or investigation controls. Restricted roles see the existing role message without a detail request. Missing, unauthorized and unreachable matches show an unavailable message and retry/back controls without metadata or review forms. A mismatched response identity is rejected. The server remains authoritative on each subsequent operation.
+
+An initial link check is followed by the existing evidence, review, ownership and investigation components. A background workspace refresh does not remount the detail or erase an unsaved note. Opening a link never acknowledges, resolves, assigns, creates an investigation or approves anything. Review commands retain their existing CSRF, idempotency, version, role and site checks. A link contains only the match ID, not credentials or snapshot payloads; its recipient must already have appropriate access.
+
+This frontend-only change does not alter schema 0016 or the existing records. Outbound alert delivery, retries, escalation and maintenance suppression remain separate development work.
