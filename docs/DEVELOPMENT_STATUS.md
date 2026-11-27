@@ -18,7 +18,7 @@ Implementation evidence reviewed for this snapshot:
 
 The header attention panel now checks unreviewed saved rule matches inside the portal and opens exact, bookmarkable match-review records within permitted site access. Demonstration episodes remain separate. The panel checks on open or explicit refresh; it is not a push or outbound delivery system.
 
-Exact match pages also provide a permission-scoped JSON review download with the saved trigger evidence, current review/ownership states, bounded history with explicit omission flags and a linked-investigation summary. It is a local readout, not a signed certificate, atomic snapshot or system backup. See CONDITION_REVIEW_EXPORT.md.
+Exact match pages also provide permission-scoped JSON and printable HTML review downloads with the saved trigger evidence, current review/ownership states, bounded history with explicit omission flags and a linked-investigation summary. The readable HTML can be printed or saved as PDF through the browser. These are local readouts, not signed certificates, atomic snapshots or system backups. See CONDITION_REVIEW_EXPORT.md and PRINTABLE_CONDITION_REVIEW.md.
 
 Work remaining includes approved external notification routing/delivery/retries/escalation and maintenance suppression; representative real-source integration and outage behavior; job/resource/parts and field/return-to-service evidence; a vendor CMMS connection; agreed downtime/reliability/report calculations; selected production identity, hosting, storage/retention and durable processing; monitoring, off-machine backups, recovery/load/security acceptance; named pilot owners, training and rollout sign-off. Optional deployment choices remain subject to agreed scope.
 

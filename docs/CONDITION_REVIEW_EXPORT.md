@@ -2,6 +2,8 @@
 
 Open an exact condition-match page and choose **Download review record (JSON)**. The file includes the saved triggering evidence and matched rule revision, current review and ownership states, their newest-first histories and a linked-investigation summary. It uses format `sentinel.condition-review`, version 1, with an export-generation timestamp and UTC/GST time guidance.
 
+For a readable version, choose **Download printable report**. It uses the same data and downloads a self-contained HTML document that can be printed or saved as PDF through the browser. See PRINTABLE_CONDITION_REVIEW.md for formatting and content-safety details.
+
 Each history section includes at most its 100 newest entries. Included and total counts and an explicit truncated flag distinguish a bounded export from complete history. Older ownership entries remain available through the existing paginated ownership endpoint. The export excludes full investigation payloads and approvals, raw event sequences, work-order execution, credentials and private configuration. It is a local readout, not a signed certificate, atomic database snapshot, physical-maintenance confirmation or system backup. Live state can change during or after generation.
 
 `GET /api/condition-rules/matches/{match_id}/export` uses the existing engineer/admin role and canonical equipment-site guard before assembling any report. Evidence consistency checks reject a trigger linked to another equipment item. A malformed investigation link is represented as unavailable without disclosing another asset's identity or title. Nonfinite legacy context values use the existing evidence serializer's null representation. The response is a JSON attachment with `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`.
