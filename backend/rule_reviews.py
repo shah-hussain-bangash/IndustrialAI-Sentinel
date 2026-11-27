@@ -129,6 +129,12 @@ def create_rule_review_router(asset_for, idempotent, finish):
         match, asset = match_for(db, user, match_id)
         return match_evidence(db, match, asset)
 
+    @router.get("/{match_id}/export")
+    def export(match_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+        from .rule_exports import export_match
+        match, asset = match_for(db, user, match_id)
+        return export_match(db, match, asset)
+
     @router.get("/{match_id}/reviews")
     def history(match_id: str, before_version: int | None = Query(default=None, ge=1),
                 user: User = Depends(current_user), db: Session = Depends(get_db)):

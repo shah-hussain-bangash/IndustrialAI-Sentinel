@@ -1,0 +1,11 @@
+# Downloadable condition-review record — 27 November 2026
+
+Open an exact condition-match page and choose **Download review record (JSON)**. The file includes the saved triggering evidence and matched rule revision, current review and ownership states, their newest-first histories and a linked-investigation summary. It uses format `sentinel.condition-review`, version 1, with an export-generation timestamp and UTC/GST time guidance.
+
+Each history section includes at most its 100 newest entries. Included and total counts and an explicit truncated flag distinguish a bounded export from complete history. Older ownership entries remain available through the existing paginated ownership endpoint. The export excludes full investigation payloads and approvals, raw event sequences, work-order execution, credentials and private configuration. It is a local readout, not a signed certificate, atomic database snapshot, physical-maintenance confirmation or system backup. Live state can change during or after generation.
+
+`GET /api/condition-rules/matches/{match_id}/export` uses the existing engineer/admin role and canonical equipment-site guard before assembling any report. Evidence consistency checks reject a trigger linked to another equipment item. A malformed investigation link is represented as unavailable without disclosing another asset's identity or title. Nonfinite legacy context values use the existing evidence serializer's null representation. The response is a JSON attachment with `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`.
+
+The UI validates report format and match identity before requesting a browser download, shows API failures in the page, and ignores a response after the component is unmounted. It does not report a completed file save merely because the browser download was requested. The download button is disabled while a review/ownership/investigation command is running. A downloaded file is outside subsequent portal permission or revocation enforcement; store review notes and names privately.
+
+No database migration or record mutation is required; schema remains 0016. Tests verify historical revision preservation, read-only behavior, session/role/site checks, bounded history, inconsistent links and nonfinite context handling. Outbound delivery and escalation remain pending.

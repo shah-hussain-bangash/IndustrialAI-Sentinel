@@ -1,4 +1,4 @@
-# Development status snapshot — 26 November 2026
+# Development status snapshot — 27 November 2026
 
 Production workspace > Development phases now describes the local build's implemented work, remaining scope and acceptance requirement for each of the ten existing development phases. Status labels mean Local workflow available, Partly implemented or Planned. They do not certify production readiness, imply that a whole phase is complete, or provide a live configuration/security assessment. Pilot and production rollout remain planned. No percentage-complete estimate is used.
 
@@ -17,6 +17,8 @@ Implementation evidence reviewed for this snapshot:
 | Local recovery and loading | backend/recovery.py; isolated restore verification; WorkspaceTool loading/recovery harness and startup dependency-graph checks |
 
 The header attention panel now checks unreviewed saved rule matches inside the portal and opens exact, bookmarkable match-review records within permitted site access. Demonstration episodes remain separate. The panel checks on open or explicit refresh; it is not a push or outbound delivery system.
+
+Exact match pages also provide a permission-scoped JSON review download with the saved trigger evidence, current review/ownership states, bounded history with explicit omission flags and a linked-investigation summary. It is a local readout, not a signed certificate, atomic snapshot or system backup. See CONDITION_REVIEW_EXPORT.md.
 
 Work remaining includes approved external notification routing/delivery/retries/escalation and maintenance suppression; representative real-source integration and outage behavior; job/resource/parts and field/return-to-service evidence; a vendor CMMS connection; agreed downtime/reliability/report calculations; selected production identity, hosting, storage/retention and durable processing; monitoring, off-machine backups, recovery/load/security acceptance; named pilot owners, training and rollout sign-off. Optional deployment choices remain subject to agreed scope.
 

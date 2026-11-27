@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { Button } from "./ui";
 import { RuleMatchReview } from "./RuleMatchReview";
+import { ConditionReviewDownload } from "./ConditionReviewDownload";
 
 type Identity = { match_id: string; asset: { tag: string; name: string; site: string }; rule: { name: string; version: number } };
 
@@ -34,6 +35,7 @@ export function ConditionMatchDetail({ matchId, site }: { matchId: string; site:
       <h3>{record.asset.tag} · {record.rule.name} · Revision {record.rule.version}</h3>
       <p>{record.asset.name} · {record.asset.site}</p>
       <p className="local-note">You can bookmark this page. Anyone opening the link must sign in and have the required role and site access.</p>
+      <ConditionReviewDownload key={`download-${matchId}`} matchId={matchId} locked={saving} />
       <RuleMatchReview key={matchId} matchId={matchId} onBusy={setSaving} onSaved={async () => {}} />
     </>}
   </section>;
