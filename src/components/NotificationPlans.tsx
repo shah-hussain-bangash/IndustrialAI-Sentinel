@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, post, type Asset } from "../api";
 import { Button } from "./ui";
 import { NotificationPlanReview } from "./NotificationPlanReview";
+import { NotificationRehearsals } from "./NotificationRehearsals";
 
 type Person = { id: string; name: string; role?: string };
 type Plan = { version: number; rule_version: number; name: string; recipients: Person[]; actor_name: string; reason: string; created: number };
@@ -42,9 +43,10 @@ function PlanEditor({ruleId,onBusy}:{ruleId:string;onBusy:(busy:boolean)=>void})
   const [data,setData]=useState<Info|null>(null),[name,setName]=useState(""),[reason,setReason]=useState(""),[ids,setIds]=useState<string[]>([]),[names,setNames]=useState<Record<string,string>>({});
   const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(""),[message,setMessage]=useState("");
   const [reviewBusy,setReviewBusy]=useState(false);
+  const [rehearsalBusy,setRehearsalBusy]=useState(false);
   const [search,setSearch]=useState(""),[matchId,setMatchId]=useState(""),[preview,setPreview]=useState<Preview|null>(null),[history,setHistory]=useState<History|null>(null);
   const current=useRef(true),path="/notification-plans/rules/"+ruleId;
-  useEffect(()=>{onBusy(busy||loading||reviewBusy);return()=>onBusy(false);},[busy,loading,reviewBusy,onBusy]);
+  useEffect(()=>{onBusy(busy||loading||reviewBusy||rehearsalBusy);return()=>onBusy(false);},[busy,loading,reviewBusy,rehearsalBusy,onBusy]);
   async function load() {
     const answer=await api<Info>(path);
     if(!current.current)return;
@@ -82,8 +84,8 @@ function PlanEditor({ruleId,onBusy}:{ruleId:string;onBusy:(busy:boolean)=>void})
   }
   return <div style={{marginTop:20}}>
     {loading&&<p role="status">Loading notification planning…</p>}{error&&<p role="alert" className="form-error">{error}</p>}{message&&<p role="status">{message}</p>}
-    <Button type="button" disabled={busy||loading||reviewBusy} onClick={()=>void reload()}>Reload saved notification plan</Button>
-    {data&&<fieldset disabled={busy||loading} style={{border:0,padding:0}}><fieldset disabled={reviewBusy} style={{border:0,padding:0}}><h3>{data.asset_tag} · {data.rule_name}</h3><p>Current saved rule revision: {data.latest_rule_version}. Event: new saved-rule match. Planned channel: email.</p>
+    <Button type="button" disabled={busy||loading||reviewBusy||rehearsalBusy} onClick={()=>void reload()}>Reload saved notification plan</Button>
+    {data&&<fieldset disabled={busy||loading} style={{border:0,padding:0}}><fieldset disabled={reviewBusy||rehearsalBusy} style={{border:0,padding:0}}><h3>{data.asset_tag} · {data.rule_name}</h3><p>Current saved rule revision: {data.latest_rule_version}. Event: new saved-rule match. Planned channel: email.</p>
       {data.current&&<div className="local-note" style={{display:"block"}}><strong>Saved plan revision {data.current.version}: {data.current.name}</strong><p>Bound to rule revision {data.current.rule_version} · {data.current.actor_name} · {stamp(data.current.created)}</p><p>Recipients: {data.current.recipients.map(p=>p.name).join(", ")}</p><p>{data.current.reason}</p></div>}
       {data.current&&data.current.rule_version!==data.latest_rule_version&&<p className="form-error">The saved rule has changed. Save a new notification-plan revision to bind it to the current rule. Historical previews still use the saved plan’s exact revision.</p>}
       <label>Find a planned recipient by name<input maxLength={100} value={search} onChange={e=>setSearch(e.target.value)}/></label><Button type="button" onClick={()=>void searchPeople()}>Find eligible recipients</Button>
@@ -113,7 +115,8 @@ function PlanEditor({ruleId,onBusy}:{ruleId:string;onBusy:(busy:boolean)=>void})
       </section>}
       {history&&<section><h3>Notification plan revision history</h3>{history.items.map(p=><details key={p.version}><summary>Plan revision {p.version} · Rule revision {p.rule_version} · {p.actor_name}</summary><p>{p.name} · {stamp(p.created)}</p><p>Recipients: {p.recipients.map(r=>r.name).join(", ")}</p><p>{p.reason}</p></details>)}{history.next_before_version!==null&&<Button type="button" onClick={()=>void historyPage()}>Older notification plan revisions</Button>}</section>}
     </fieldset>
-      {data.current&&<NotificationPlanReview key={`${ruleId}:${data.current.version}`} ruleId={ruleId} version={data.current.version} dirty={dirty} onBusy={setReviewBusy}/>}
+      {data.current&&<><fieldset disabled={rehearsalBusy} style={{border:0,padding:0}}><NotificationPlanReview key={`${ruleId}:${data.current.version}`} ruleId={ruleId} version={data.current.version} dirty={dirty} onBusy={setReviewBusy}/></fieldset>
+        <fieldset disabled={reviewBusy} style={{border:0,padding:0}}><NotificationRehearsals key={`${ruleId}:${data.current.version}`} ruleId={ruleId} planVersion={data.current.version} dirty={dirty} onBusy={setRehearsalBusy}/></fieldset></>}
     </fieldset>}
   </div>;
 }

@@ -648,6 +648,48 @@ class NotificationPlanReview(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class NotificationRehearsal(Base):
+    __tablename__ = "notification_rehearsals"
+    __table_args__ = (
+        ForeignKeyConstraint(["rule_id", "plan_version"], ["notification_plan_revisions.rule_id", "notification_plan_revisions.version"]),
+        ForeignKeyConstraint(["rule_id", "review_version"], ["notification_plan_reviews.rule_id", "notification_plan_reviews.version"]),
+        UniqueConstraint("rule_id", "review_version", "match_id", name="uq_notification_rehearsal_source"),
+        CheckConstraint("version >= 1 AND attempts >= 0 AND attempts <= 3", name="ck_rehearsal_version"),
+        CheckConstraint("(state IN ('queued','retry_wait') AND next_attempt_at IS NOT NULL) OR (state IN ('simulated_success','simulated_failure','exhausted','cancelled','blocked') AND next_attempt_at IS NULL)", name="ck_rehearsal_state"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    rule_id: Mapped[str] = mapped_column(ForeignKey("condition_rules.id"), index=True)
+    plan_version: Mapped[int] = mapped_column(Integer)
+    review_version: Mapped[int] = mapped_column(Integer)
+    match_id: Mapped[str] = mapped_column(ForeignKey("condition_rule_matches.id"))
+    recipients: Mapped[list] = mapped_column(JSON)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    state: Mapped[str] = mapped_column(String(30), default="queued")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    next_attempt_at: Mapped[float | None] = mapped_column(Float, nullable=True)
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    actor_name: Mapped[str] = mapped_column(String(200))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
+class NotificationRehearsalEvent(Base):
+    __tablename__ = "notification_rehearsal_events"
+    __table_args__ = (
+        CheckConstraint("version >= 1 AND attempt_number >= 0 AND attempt_number <= 3", name="ck_rehearsal_event_version"),
+        CheckConstraint("action IN ('enqueue','simulate_success','simulate_retryable_failure','simulate_permanent_failure','cancel','block')", name="ck_rehearsal_event_action"),
+    )
+    rehearsal_id: Mapped[str] = mapped_column(ForeignKey("notification_rehearsals.id"), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    action: Mapped[str] = mapped_column(String(40))
+    attempt_number: Mapped[int] = mapped_column(Integer)
+    check_reasons: Mapped[list] = mapped_column(JSON, default=list)
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    actor_name: Mapped[str] = mapped_column(String(200))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
