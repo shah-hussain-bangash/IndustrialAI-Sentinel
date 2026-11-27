@@ -25,6 +25,7 @@ import { SiteDirectory } from "../components/SiteDirectory";
 import { AdminMfaPanel } from "../components/AdminMfaPanel";
 import { ConditionRulePreview } from "../components/ConditionRulePreview";
 import { MaintenanceWindowDrafts } from "../components/MaintenanceWindowDrafts";
+import { NotificationPlans } from "../components/NotificationPlans";
 export function SettingsPage({
   user,
   operations,
@@ -49,6 +50,7 @@ export function SettingsPage({
     { id: "telemetry", label: "Telemetry access" },
     ...(["admin", "engineer"].includes(user.role) ? [{ id: "rules", label: "Condition rules" }] : []),
     ...(["admin", "engineer"].includes(user.role) ? [{ id: "windows", label: "Maintenance windows" }] : []),
+    ...(["admin", "engineer"].includes(user.role) ? [{ id: "notifications", label: "Notification plans" }] : []),
     { id: "sites", label: "Site directory" },
     { id: "recovery", label: "Backup & recovery" },
     { id: "account", label: "Account & password" },
@@ -108,6 +110,7 @@ export function SettingsPage({
       <div className="settings-grid">
         {section === "rules" && ["admin", "engineer"].includes(user.role) && <ConditionRulePreview isAdmin={user.role === "admin"} />}
         {section === "windows" && ["admin", "engineer"].includes(user.role) && <MaintenanceWindowDrafts key={user.id} />}
+        {section === "notifications" && ["admin", "engineer"].includes(user.role) && <NotificationPlans key={user.id} />}
         {section==='security'&&user.role==='admin'&&<AdminMfaPanel onRemoved={onPasswordChanged}/>}
         <section
           className="panel settings-card"

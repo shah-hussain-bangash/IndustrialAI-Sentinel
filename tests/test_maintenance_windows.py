@@ -134,7 +134,7 @@ def test_window_upgrade_from_0016_preserves_existing_rows_and_repeats(tmp_path):
         original = {name: db.execute('SELECT * FROM "' + name + '" ORDER BY 1').fetchall() for name in names}
     run(env, 'scripts/upgrade_database.py', '--check-only'); run(env, 'scripts/upgrade_database.py')
     with sqlite3.connect(path) as db:
-        assert db.execute('SELECT version_num FROM alembic_version').fetchone()[0] == '0019'
+        assert db.execute('SELECT version_num FROM alembic_version').fetchone()[0] == '0020'
         for name, rows in original.items(): assert db.execute('SELECT * FROM "' + name + '" ORDER BY 1').fetchall() == rows, name
         assert db.execute('SELECT count(*) FROM maintenance_window_drafts').fetchone()[0] == 0
         assert db.execute('SELECT count(*) FROM maintenance_window_revisions').fetchone()[0] == 0

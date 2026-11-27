@@ -46,12 +46,12 @@ def upgrade():
     with engine.connect() as conn:
         if "alembic_version" in tables:
             versions = conn.exec_driver_sql("SELECT version_num FROM alembic_version").scalars().all()
-            if len(versions) > 1 or versions and versions[0] not in ("0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009", "0010", "0011", "0012", "0013", "0014", "0015", "0016", "0017", "0018", "0019"):
+            if len(versions) > 1 or versions and versions[0] not in ("0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009", "0010", "0011", "0012", "0013", "0014", "0015", "0016", "0017", "0018", "0019", "0020"):
                 raise SystemExit("Unexpected migration history. No changes made; review this database separately.")
             revision = versions[0] if versions else None
-        inferred = "0019" if "maintenance_window_controls" in tables else "0018" if "maintenance_window_reviews" in tables else "0017" if "maintenance_window_drafts" in tables else "0016" if "condition_match_investigations" in tables else "0015" if "condition_rule_assignments" in tables else "0014" if "condition_rule_reviews" in tables else "0013" if "condition_rule_deployments" in tables else "0012" if "condition_rules" in tables else "0011" if "mfa_credentials" in tables else "0010" if "account_links" in tables else "0009" if "organization" in tables else "0008" if "telemetry_gateways" in tables else "0007" if "document_originals" in tables else "0006" if "sensor_quarantine" in tables else "0005" if "snapshot_projections" in tables else "0004" if "sensor_events" in tables else "0003" if "sites" in tables else "0002" if "sensors" in tables else "0001"
+        inferred = "0020" if "notification_plan_revisions" in tables else "0019" if "maintenance_window_controls" in tables else "0018" if "maintenance_window_reviews" in tables else "0017" if "maintenance_window_drafts" in tables else "0016" if "condition_match_investigations" in tables else "0015" if "condition_rule_assignments" in tables else "0014" if "condition_rule_reviews" in tables else "0013" if "condition_rule_deployments" in tables else "0012" if "condition_rules" in tables else "0011" if "mfa_credentials" in tables else "0010" if "account_links" in tables else "0009" if "organization" in tables else "0008" if "telemetry_gateways" in tables else "0007" if "document_originals" in tables else "0006" if "sensor_quarantine" in tables else "0005" if "snapshot_projections" in tables else "0004" if "sensor_events" in tables else "0003" if "sites" in tables else "0002" if "sensors" in tables else "0001"
         if tables - {"alembic_version"}:
-            target = Base.metadata if inferred == "0019" else historical_metadata(inferred)
+            target = Base.metadata if inferred == "0020" else historical_metadata(inferred)
             diffs = compare_metadata(MigrationContext.configure(conn, opts={"compare_type":True}), target)
             if diffs:
                 raise SystemExit("The existing schema differs from the expected application schema. Nothing was stamped or migrated; review the database first.")
@@ -70,7 +70,7 @@ def upgrade():
     if source.exists():
         backup_dir = source.parent / "backups"
         backup_dir.mkdir(parents=True, exist_ok=True)
-        backup = backup_dir / ("before-maintenance-window-control-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ") + ".db")
+        backup = backup_dir / ("before-notification-plan-drafts-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ") + ".db")
         with sqlite3.connect(source) as src, sqlite3.connect(backup) as dest:
             if src.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                 raise SystemExit("Database integrity check failed. Upgrade stopped.")
@@ -88,13 +88,13 @@ def upgrade():
             ensure_sensors(db, assets)
             db.commit()
             count = len(list(db.scalars(select(Sensor.id))))
-        report = {"revision":"0019", "database":str(source), "backup":str(backup) if backup else None, "assets":len(assets), "sensors":count, "existing_readings_and_passwords":"preserved"}
+        report = {"revision":"0020", "database":str(source), "backup":str(backup) if backup else None, "assets":len(assets), "sensors":count, "existing_readings_and_passwords":"preserved"}
         report_dir = source.parent / "upgrade-reports"
         report_dir.mkdir(parents=True,exist_ok=True)
-        report_file = report_dir / ("maintenance-window-control-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ") + ".json")
+        report_file = report_dir / ("notification-plan-drafts-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ") + ".json")
         report_file.write_text(json.dumps(report,indent=2),encoding="utf-8")
         engine.dispose()
-        print(f"MAINTENANCE_WINDOW_CONTROL_UPGRADE=PASS; revision=0019; sensors={count}")
+        print(f"NOTIFICATION_PLAN_DRAFT_UPGRADE=PASS; revision=0020; sensors={count}")
         print("UPGRADE_REPORT=" + str(report_file))
     except Exception:
         engine.dispose()

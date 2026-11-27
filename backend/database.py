@@ -615,6 +615,23 @@ class MaintenanceWindowSuppression(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class NotificationPlanRevision(Base):
+    __tablename__ = "notification_plan_revisions"
+    __table_args__ = (
+        ForeignKeyConstraint(["rule_id", "rule_version"], ["condition_rule_revisions.rule_id", "condition_rule_revisions.version"]),
+        CheckConstraint("version >= 1 AND rule_version >= 1", name="ck_notification_plan_version"),
+    )
+    rule_id: Mapped[str] = mapped_column(ForeignKey("condition_rules.id"), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    rule_version: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(String(120))
+    recipients: Mapped[list] = mapped_column(JSON)
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    actor_name: Mapped[str] = mapped_column(String(200))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
