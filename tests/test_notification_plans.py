@@ -1,7 +1,7 @@
 import uuid
 import pytest
 from sqlalchemy import select,delete,func
-from backend.database import (SessionLocal,NotificationPlanRevision as Plan,User,SiteMembership,Audit,Reading,AccountLink,
+from backend.database import (SessionLocal,NotificationPlanRevision as Plan,NotificationPlanReview,User,SiteMembership,Audit,Reading,AccountLink,
     ConditionRuleMatch,ConditionRuleRevision,ConditionRuleDeployment,ConditionRuleReview,WorkOrder)
 from test_live_rules import cleanup_live_fixture,draft,control,ingest
 from test_window_reviews import post
@@ -10,7 +10,7 @@ from test_window_reviews import post
 @pytest.fixture(autouse=True)
 def clear_plans(cleanup_live_fixture):
     yield
-    with SessionLocal() as db:db.execute(delete(Plan));db.commit()
+    with SessionLocal() as db:db.execute(delete(NotificationPlanReview));db.execute(delete(Plan));db.commit()
 
 
 def setup_plan(client,sign_in):

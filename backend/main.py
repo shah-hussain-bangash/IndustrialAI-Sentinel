@@ -63,6 +63,7 @@ from .match_investigations import create_match_investigation_router
 from .maintenance_windows import create_maintenance_window_router
 from .maintenance_controls import create_maintenance_control_router
 from .notification_plans import create_notification_plan_router
+from .notification_reviews import create_notification_review_router
 
 
 @asynccontextmanager
@@ -104,6 +105,8 @@ async def lifespan(app):
         raise RuntimeError("Maintenance-window control upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     if existing.has_table("assets") and not existing.has_table("notification_plan_revisions"):
         raise RuntimeError("Notification plan draft upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
+    if existing.has_table("assets") and not existing.has_table("notification_plan_reviews"):
+        raise RuntimeError("Notification planning review upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     initialize()
     if not inspect(engine).has_table("account_links"):
         raise RuntimeError("Account email upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
@@ -1483,6 +1486,7 @@ app.include_router(create_match_investigation_router(asset_for, idempotent, fini
 app.include_router(create_maintenance_window_router(asset_for, idempotent, finish))
 app.include_router(create_maintenance_control_router(asset_for, idempotent, finish))
 app.include_router(create_notification_plan_router(asset_for, idempotent, finish))
+app.include_router(create_notification_review_router(asset_for, idempotent, finish))
 
 DIST = Path(__file__).resolve().parents[1] / "dist"
 if DIST.exists():

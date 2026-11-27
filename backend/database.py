@@ -632,6 +632,22 @@ class NotificationPlanRevision(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class NotificationPlanReview(Base):
+    __tablename__ = "notification_plan_reviews"
+    __table_args__ = (
+        ForeignKeyConstraint(["rule_id", "plan_version"], ["notification_plan_revisions.rule_id", "notification_plan_revisions.version"]),
+        CheckConstraint("version >= 1 AND plan_version >= 1 AND state IN ('approved','rejected')", name="ck_notification_review_state"),
+    )
+    rule_id: Mapped[str] = mapped_column(ForeignKey("condition_rules.id"), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    plan_version: Mapped[int] = mapped_column(Integer)
+    state: Mapped[str] = mapped_column(String(20))
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    actor_name: Mapped[str] = mapped_column(String(200))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
