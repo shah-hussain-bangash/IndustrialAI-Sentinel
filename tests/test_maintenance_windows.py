@@ -1,7 +1,7 @@
 import uuid
 import pytest
 from sqlalchemy import select, delete, func
-from backend.database import (SessionLocal, MaintenanceWindowDraft, MaintenanceWindowRevision, Asset, User, LoginSession, SiteMembership,
+from backend.database import (SessionLocal, MaintenanceWindowDraft, MaintenanceWindowRevision, MaintenanceWindowReview, Asset, User, LoginSession, SiteMembership,
     ConditionRuleDeployment, ConditionRuleMatch, ConditionRuleReview, WorkOrder, Audit, Reading, now)
 from backend.security import password_hash
 from test_live_rules import cleanup_live_fixture, draft, control, ingest
@@ -11,7 +11,7 @@ from test_live_rules import cleanup_live_fixture, draft, control, ingest
 def clear_windows(cleanup_live_fixture):
     yield
     with SessionLocal() as db:
-        db.execute(delete(MaintenanceWindowRevision)); db.execute(delete(MaintenanceWindowDraft)); db.commit()
+        db.execute(delete(MaintenanceWindowReview)); db.execute(delete(MaintenanceWindowRevision)); db.execute(delete(MaintenanceWindowDraft)); db.commit()
 
 
 def body(asset):
@@ -46,7 +46,7 @@ def test_window_create_revision_idempotency_and_audit(client, sign_in):
     assert history[1]['name'] == original['name'] and history[1]['ends_at'] == original['ends_at']
     with SessionLocal() as db:
         assert db.scalar(select(func.count()).select_from(MaintenanceWindowRevision).where(MaintenanceWindowRevision.draft_id == saved['id'])) == 2
-        assert db.scalar(select(func.count()).select_from(Audit).where(Audit.action == 'Maintenance window draft saved', Audit.target == asset['tag'])) == 2
+        assert db.scalar(select(func.count()).select_from(Audit).where(Audit.action == 'Maintenance window draft saved', Audit.target == asset['tag'], Audit.details.contains(saved['id']))) == 2
 
 
 def test_window_drafts_do_not_suppress_snapshots_or_change_existing_work(client, sign_in):
@@ -134,7 +134,7 @@ def test_window_upgrade_from_0016_preserves_existing_rows_and_repeats(tmp_path):
         original = {name: db.execute('SELECT * FROM "' + name + '" ORDER BY 1').fetchall() for name in names}
     run(env, 'scripts/upgrade_database.py', '--check-only'); run(env, 'scripts/upgrade_database.py')
     with sqlite3.connect(path) as db:
-        assert db.execute('SELECT version_num FROM alembic_version').fetchone()[0] == '0017'
+        assert db.execute('SELECT version_num FROM alembic_version').fetchone()[0] == '0018'
         for name, rows in original.items(): assert db.execute('SELECT * FROM "' + name + '" ORDER BY 1').fetchall() == rows, name
         assert db.execute('SELECT count(*) FROM maintenance_window_drafts').fetchone()[0] == 0
         assert db.execute('SELECT count(*) FROM maintenance_window_revisions').fetchone()[0] == 0

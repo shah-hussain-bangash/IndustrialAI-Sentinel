@@ -96,6 +96,8 @@ async def lifespan(app):
         raise RuntimeError("Condition investigation link upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     if existing.has_table("assets") and not all(existing.has_table(t) for t in ("maintenance_window_drafts", "maintenance_window_revisions")):
         raise RuntimeError("Maintenance-window draft upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
+    if existing.has_table("assets") and not existing.has_table("maintenance_window_reviews"):
+        raise RuntimeError("Maintenance-window review upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     initialize()
     if not inspect(engine).has_table("account_links"):
         raise RuntimeError("Account email upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")

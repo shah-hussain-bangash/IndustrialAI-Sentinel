@@ -157,7 +157,7 @@ def test_revision6_to7_preserves_documents_and_marks_legacy_missing(tmp_path):
         before={t:db.execute(f'SELECT * FROM "{t}" ORDER BY 1').fetchall() for t in tables}
     run(env,"scripts/upgrade_database.py")
     with sqlite3.connect(path) as db:
-        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0017"
+        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0018"
         for t,rows in before.items():assert db.execute(f'SELECT * FROM "{t}" ORDER BY 1').fetchall()==rows
         assert db.execute("SELECT count(*) FROM document_originals").fetchone()[0]==0
     run(env,"-m","alembic","check")

@@ -1,0 +1,11 @@
+# Maintenance-window planning review — 27 November 2026
+
+Workspace settings > Maintenance windows now shows independent planning review below a loaded draft. Engineers can inspect its saved revision, current decision and paginated review history. An administrator other than the author of that exact revision can approve or reject it with an explicit confirmation and a 5–1000 character note. The saved name, equipment selection, GST interval, author and revision reason remain visible. Unsaved form changes block a decision until saved or reloaded.
+
+Decisions are planning records only. Approval does not activate downtime, suppress signals, pause rules, resolve condition matches, authorize physical work, dispatch maintenance or send notifications. Operational activation and suppression remain unimplemented. Runtime simulation plans are not automatically approved.
+
+GET /api/maintenance-windows/drafts/{id}/reviews returns the current saved revision, global review version, current decision (or null), latest historical review, eligibility and 50 review events. Older events use before_version. POST on the same path requires decision (approved/rejected), expected_draft_version, expected_review_version, reason and confirmed:true. All access uses current canonical equipment/site permission; writes require administrator role, CSRF and idempotency. The draft row serializes decisions with edits; stale draft/review versions return 409. Exact retries return their recorded receipt. New decisions append immutable events. Saving a new draft revision makes earlier decisions historical and returns the new revision to pending review.
+
+Schema 0018 adds only maintenance_window_reviews with a composite reference to its exact saved revision. The checked SQLite upgrader validates and backs up the old database before migration. Existing data and private configuration are preserved. Historical migration files stay unchanged; PostgreSQL deployment requires its own reviewed rollout.
+
+Automated checks cover independent review, self-review rejection, engineer/site/anonymous/CSRF guards, validation, stale revisions, repeat delivery, pagination, upgrade preservation and unchanged rule evaluation. Runtime verification must remain read-only for decisions unless a person explicitly supplies a planning decision.

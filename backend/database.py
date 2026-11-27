@@ -565,6 +565,22 @@ class MaintenanceWindowRevision(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class MaintenanceWindowReview(Base):
+    __tablename__ = "maintenance_window_reviews"
+    __table_args__ = (
+        ForeignKeyConstraint(["draft_id", "draft_version"], ["maintenance_window_revisions.draft_id", "maintenance_window_revisions.version"]),
+        CheckConstraint("version >= 1 AND draft_version >= 1 AND state IN ('approved', 'rejected')", name="ck_window_review_state"),
+    )
+    draft_id: Mapped[str] = mapped_column(ForeignKey("maintenance_window_drafts.id"), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    draft_version: Mapped[int] = mapped_column(Integer)
+    state: Mapped[str] = mapped_column(String(20))
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    actor_name: Mapped[str] = mapped_column(String(200))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)

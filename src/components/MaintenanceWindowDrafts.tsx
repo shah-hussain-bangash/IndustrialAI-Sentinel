@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, post, type Asset } from "../api";
 import { Button } from "./ui";
 import { gstWindowTime, gstWindowInput, validWindowRange } from "../lib/maintenanceWindowTime";
+import { MaintenanceWindowReview } from "./MaintenanceWindowReview";
 
 type Revision = { version: number; name: string; starts_at: number; ends_at: number; reason: string; actor_name: string; created: number };
 type Draft = Revision & { id: string; asset_id: string; state: "draft"; active: false };
@@ -35,8 +36,9 @@ function WindowEditor({ assetId, onBusy }: { assetId: string; onBusy: (busy: boo
   const [busy, setBusy] = useState(false), [loading, setLoading] = useState(true), [error, setError] = useState(""), [message, setMessage] = useState("");
   const [history, setHistory] = useState<History | null>(null), [truncated, setTruncated] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [reviewBusy, setReviewBusy] = useState(false);
   const current = useRef(true);
-  useEffect(() => { onBusy(busy || loading); }, [busy, loading, onBusy]);
+  useEffect(() => { onBusy(busy || loading || reviewBusy); }, [busy, loading, reviewBusy, onBusy]);
   async function refresh() {
     const answer = await api<{items: Draft[]; truncated: boolean}>("/maintenance-windows/drafts?asset_id=" + encodeURIComponent(assetId));
     if (current.current) { setItems(answer.items); setTruncated(answer.truncated); setLoaded(true); }
@@ -67,7 +69,7 @@ function WindowEditor({ assetId, onBusy }: { assetId: string; onBusy: (busy: boo
     } catch (e) { if (current.current) setError((e as Error).message); }
     finally { if (current.current) setBusy(false); }
   }
-  return <fieldset disabled={busy || loading} style={{ border: 0, padding: 0, marginTop: 20 }}>
+  return <><fieldset disabled={busy || loading || reviewBusy} style={{ border: 0, padding: 0, marginTop: 20 }}>
     {loading && <p role="status">Loading saved windows…</p>}
     {truncated && <p>Showing the newest 100 drafts for this equipment.</p>}
     {items.length > 0 && <div className="table-scroll"><table className="data-table"><thead><tr><th>Draft / version</th><th>Planned interval (GST)</th><th>Saved by</th><th>Action</th></tr></thead><tbody>
@@ -88,5 +90,9 @@ function WindowEditor({ assetId, onBusy }: { assetId: string; onBusy: (busy: boo
     {error && <p role="alert" className="form-error">{error}</p>}{message && <p role="status">{message}</p>}
     {history && <section><h3>Window revision history</h3>{history.items.map(row => <details key={row.version}><summary>Version {row.version} · {row.name} · {row.actor_name}</summary><p>{stamp(row.starts_at)} to {stamp(row.ends_at)}</p><p>Saved {stamp(row.created)}</p><p>{row.reason}</p></details>)}
       {history.next_before_version !== null && <Button type="button" onClick={() => void viewHistory()}>Older window revisions</Button>}</section>}
-  </fieldset>;
+  </fieldset>
+    {selected && <fieldset disabled={busy || loading} style={{ border: 0, padding: 0 }}><MaintenanceWindowReview
+      key={`${selected.id}:${selected.version}`} draftId={selected.id} version={selected.version} onBusy={setReviewBusy}
+      dirty={name !== selected.name || gstWindowTime(start) !== selected.starts_at || gstWindowTime(end) !== selected.ends_at || !!reason.trim()} /></fieldset>}
+  </>;
 }
