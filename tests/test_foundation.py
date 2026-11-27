@@ -116,7 +116,7 @@ def test_upgrade_0008_preserves_rows_repeats_and_matches_metadata(tmp_path):
     run(env,'scripts/upgrade_database.py')
     with sqlite3.connect(path) as db:
         for name,rows in before.items():assert db.execute(f'SELECT * FROM "{name}" ORDER BY 1').fetchall()==rows,name
-        assert db.execute('SELECT version_num FROM alembic_version').fetchone()[0]=='0018'
+        assert db.execute('SELECT version_num FROM alembic_version').fetchone()[0]=='0019'
         assert db.execute('SELECT configured FROM organization').fetchone()[0]==0
         assert db.execute('SELECT count(*) FROM equipment_placements').fetchone()[0]==0
         assert not db.execute('PRAGMA foreign_key_check').fetchall()

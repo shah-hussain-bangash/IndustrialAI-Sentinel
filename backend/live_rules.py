@@ -6,7 +6,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select, update, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from .database import ConditionRule, ConditionRuleRevision, ConditionRuleDeployment, ConditionRuleMatch, Reading, Audit, Asset, User, now
+from .database import ConditionRule, ConditionRuleRevision, ConditionRuleDeployment, ConditionRuleMatch, Reading, Audit, Asset, User, now, MaintenanceWindowSuppression
+from .maintenance_policy import intervals, suppression_for, crosses_window
 from .security import allow, current_user, get_db
 from .rule_reviews import current_review, review_json
 
@@ -27,6 +28,9 @@ def close_matches(db, rule_id, at, reason, asset):
 
 def process_snapshot(db, asset, reading):
     db.flush()
+    db.execute(update(Asset).where(Asset.id == asset.id).values(version=Asset.version))
+    windows = intervals(db, asset.id)
+    suppressed_by = suppression_for(windows, reading.timestamp, now())
     deployments = list(db.scalars(select(ConditionRuleDeployment).join(ConditionRule, ConditionRule.id == ConditionRuleDeployment.rule_id)
                                  .where(ConditionRule.asset_id == asset.id, ConditionRuleDeployment.state == "active")))
     for row in deployments:
@@ -41,6 +45,8 @@ def process_snapshot(db, asset, reading):
             raise HTTPException(409, "Rule evaluation changed concurrently. Retry the same batch request.")
         db.refresh(row)
         config = db.get(ConditionRuleRevision, (row.rule_id, row.rule_version)).settings
+        if crosses_window(windows, row.last_timestamp, reading.timestamp):
+            row.candidate_since = None
         value = getattr(reading, config["channel"])
         if row.last_timestamp and reading.timestamp - row.last_timestamp > config["maximum_gap_seconds"]:
             close_matches(db, row.rule_id, row.last_timestamp, "data_gap", asset)
@@ -54,6 +60,11 @@ def process_snapshot(db, asset, reading):
                 if value <= config["threshold"] - config["hysteresis"]:
                     close_matches(db, row.rule_id, reading.timestamp, "cleared", asset)
                     row.candidate_since = None
+            elif suppressed_by:
+                row.candidate_since = None
+                if value > config["threshold"]:
+                    db.add(MaintenanceWindowSuppression(rule_id=row.rule_id, rule_version=row.rule_version,
+                        reading_id=reading.id, draft_id=suppressed_by, control_version=1, observed_at=reading.timestamp))
             elif value > config["threshold"]:
                 if row.candidate_since is None:
                     row.candidate_since = reading.timestamp

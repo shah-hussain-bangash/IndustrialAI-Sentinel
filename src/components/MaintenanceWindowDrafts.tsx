@@ -5,7 +5,7 @@ import { gstWindowTime, gstWindowInput, validWindowRange } from "../lib/maintena
 import { MaintenanceWindowReview } from "./MaintenanceWindowReview";
 
 type Revision = { version: number; name: string; starts_at: number; ends_at: number; reason: string; actor_name: string; created: number };
-type Draft = Revision & { id: string; asset_id: string; state: "draft"; active: false };
+type Draft = Revision & { id: string; asset_id: string; state: string; active: boolean; locked: boolean };
 type History = { items: Revision[]; next_before_version: number | null };
 const stamp = (epoch: number) => new Date(epoch * 1000).toLocaleString("en-GB", { timeZone: "Asia/Dubai" }) + " GST";
 
@@ -21,7 +21,7 @@ export function MaintenanceWindowDrafts() {
   }, []);
   return <section className="panel settings-card full-span"><h2>Maintenance-window drafts</h2>
     <p>Prepare planned downtime for review. Every saved revision records its author, time and reason.</p>
-    <div className="local-note">Planning only. These drafts do not suppress signals, pause rules, resolve reviews or dispatch work. Operational activation is a later development step.</div>
+    <div className="local-note">Saving and planning review leave a window inactive. An administrator can separately activate an independently approved future plan to suppress new saved-rule matches for this equipment. Existing matches, reviews, demonstration episodes and physical work remain separate.</div>
     {loading && <p role="status">Loading permitted equipment…</p>}{error && <p role="alert" className="form-error">{error}</p>}
     {!loading && !assets.length && <p>No permitted equipment is available.</p>}
     <label>Equipment across your permitted sites<select disabled={loading || editorBusy} value={assetId} onChange={e => setAssetId(e.target.value)}>
@@ -37,6 +37,7 @@ function WindowEditor({ assetId, onBusy }: { assetId: string; onBusy: (busy: boo
   const [history, setHistory] = useState<History | null>(null), [truncated, setTruncated] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [reviewBusy, setReviewBusy] = useState(false);
+  const [controlLocked, setControlLocked] = useState(false);
   const current = useRef(true);
   useEffect(() => { onBusy(busy || loading || reviewBusy); }, [busy, loading, reviewBusy, onBusy]);
   async function refresh() {
@@ -45,9 +46,10 @@ function WindowEditor({ assetId, onBusy }: { assetId: string; onBusy: (busy: boo
   }
   useEffect(() => { current.current = true; void refresh().catch(e => { if (current.current) setError((e as Error).message); }).finally(() => { if (current.current) setLoading(false); }); return () => { current.current = false; }; }, [assetId]);
   function load(draft: Draft) {
+    setControlLocked(draft.locked);
     setSelected(draft); setName(draft.name); setStart(gstWindowInput(draft.starts_at)); setEnd(gstWindowInput(draft.ends_at)); setReason(""); setHistory(null); setError(""); setMessage("");
   }
-  function separate() { setSelected(null); setName(""); setStart(""); setEnd(""); setReason(""); setHistory(null); setError(""); setMessage(""); }
+  function separate() { setControlLocked(false); setSelected(null); setName(""); setStart(""); setEnd(""); setReason(""); setHistory(null); setError(""); setMessage(""); }
   async function save(event: FormEvent) {
     event.preventDefault(); const startsAt = gstWindowTime(start), endsAt = gstWindowTime(end);
     if (busy || !validWindowRange(startsAt, endsAt)) return;
@@ -73,11 +75,12 @@ function WindowEditor({ assetId, onBusy }: { assetId: string; onBusy: (busy: boo
     {loading && <p role="status">Loading saved windows…</p>}
     {truncated && <p>Showing the newest 100 drafts for this equipment.</p>}
     {items.length > 0 && <div className="table-scroll"><table className="data-table"><thead><tr><th>Draft / version</th><th>Planned interval (GST)</th><th>Saved by</th><th>Action</th></tr></thead><tbody>
-      {items.map(item => <tr key={item.id}><td>{item.name}<small>Version {item.version} · Inactive draft</small></td><td>{stamp(item.starts_at)}<small>to {stamp(item.ends_at)}</small></td><td>{item.actor_name}<small>{stamp(item.created)}</small></td><td><Button type="button" onClick={() => load(item)}>Load window draft</Button></td></tr>)}
+      {items.map(item => <tr key={item.id}><td>{item.name}<small>Version {item.version} · {item.state === "draft" ? "Inactive draft" : item.state}</small></td><td>{stamp(item.starts_at)}<small>to {stamp(item.ends_at)}</small></td><td>{item.actor_name}<small>{stamp(item.created)}</small></td><td><Button type="button" onClick={() => load(item)}>Load window draft</Button></td></tr>)}
     </tbody></table></div>}
     {loaded && !loading && !items.length && <p>No saved maintenance-window drafts for this equipment.</p>}
     <Button type="button" onClick={async () => { setBusy(true); setError(""); try { await refresh(); } catch (e) { if (current.current) setError((e as Error).message); } finally { if (current.current) setBusy(false); } }}>Reload window list</Button>
-    <form onSubmit={save} style={{ marginTop: 20 }}><p>{selected ? `Editing ${selected.name}, version ${selected.version}. Saving creates the next revision.` : "Create a new inactive window draft."}</p>
+    <form onSubmit={save} style={{ marginTop: 20 }}><p>{controlLocked ? "This activated plan is immutable. Use cancellation below if needed; create a separate plan for another interval." : selected ? `Editing ${selected.name}, version ${selected.version}. Saving creates the next revision.` : "Create a new inactive window draft."}</p>
+      <fieldset disabled={controlLocked} style={{ border: 0, padding: 0 }}>
       <div className="settings-grid"><label>Window name<input required maxLength={120} value={name} onChange={e => setName(e.target.value)} /></label>
       <label>Start in GST (UTC+4)<input type="datetime-local" step="1" required value={start} onChange={e => setStart(e.target.value)} /></label>
       <label>End in GST (UTC+4)<input type="datetime-local" step="1" required value={end} onChange={e => setEnd(e.target.value)} /></label></div>
@@ -85,6 +88,7 @@ function WindowEditor({ assetId, onBusy }: { assetId: string; onBusy: (busy: boo
       {!!start && !!end && !validWindowRange(gstWindowTime(start), gstWindowTime(end)) && <p className="form-error">Choose a valid interval of up to seven days.</p>}
       <label>Reason for this revision<textarea required minLength={5} maxLength={1000} value={reason} onChange={e => setReason(e.target.value)} /></label>
       <Button className="primary" disabled={!loaded || !validWindowRange(gstWindowTime(start), gstWindowTime(end))}>{selected ? "Save window revision" : "Save inactive window draft"}</Button>
+      </fieldset>
       {selected && <><Button type="button" onClick={separate}>Start a separate window</Button>{!history && <Button type="button" onClick={() => void viewHistory()}>View window history</Button>}</>}
     </form>
     {error && <p role="alert" className="form-error">{error}</p>}{message && <p role="status">{message}</p>}
@@ -92,7 +96,7 @@ function WindowEditor({ assetId, onBusy }: { assetId: string; onBusy: (busy: boo
       {history.next_before_version !== null && <Button type="button" onClick={() => void viewHistory()}>Older window revisions</Button>}</section>}
   </fieldset>
     {selected && <fieldset disabled={busy || loading} style={{ border: 0, padding: 0 }}><MaintenanceWindowReview
-      key={`${selected.id}:${selected.version}`} draftId={selected.id} version={selected.version} onBusy={setReviewBusy}
+      key={`${selected.id}:${selected.version}`} draftId={selected.id} version={selected.version} onBusy={setReviewBusy} onLocked={setControlLocked}
       dirty={name !== selected.name || gstWindowTime(start) !== selected.starts_at || gstWindowTime(end) !== selected.ends_at || !!reason.trim()} /></fieldset>}
   </>;
 }

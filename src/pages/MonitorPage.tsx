@@ -24,6 +24,7 @@ import {
 } from "../api";
 
 import { Badge, Button, Empty, Chart } from "../components/ui";
+import { MaintenanceStatusBanner } from "../components/MaintenanceStatusBanner";
 import type { Run } from "../types";
 export function MonitorPage({
   assets,
@@ -70,6 +71,7 @@ export function MonitorPage({
   }, [id, refreshKey]);
   return (
     <div className="monitor-experience">
+      {id && <MaintenanceStatusBanner key={id} assetId={id} refreshKey={refreshKey} />}
       <section className="monitor-command monitor-photo-command">
         <img
           className="monitor-command-photo"

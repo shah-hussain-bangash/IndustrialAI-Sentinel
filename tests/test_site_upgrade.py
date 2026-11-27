@@ -14,7 +14,7 @@ def test_step1_to_site_ids_preserves_records_and_permissions(tmp_path):
         sensors=db.execute("SELECT id FROM sensors ORDER BY id").fetchall()
     before=snapshot(path)
     result=run(env,"scripts/upgrade_database.py")
-    assert "MAINTENANCE_WINDOW_REVIEW_UPGRADE=PASS" in result.stdout
+    assert "MAINTENANCE_WINDOW_CONTROL_UPGRADE=PASS" in result.stdout
     assert snapshot(path)==before
     expected=str(uuid.uuid5(uuid.NAMESPACE_URL,"industrialai-sentinel/site/Legacy site"))
     with sqlite3.connect(path) as db:

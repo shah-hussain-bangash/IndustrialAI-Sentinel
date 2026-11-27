@@ -6,9 +6,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from .database import MaintenanceWindowDraft, MaintenanceWindowRevision, MaintenanceWindowReview, Asset, User, Audit
 from typing import Literal
+from .maintenance_policy import locked, state, SCOPE
+from .database import now
 from .security import allow, current_user, get_db
 
-BOUNDARY = "Inactive planning draft only. Saving does not suppress signals, pause rules, resolve reviews or dispatch maintenance. Activation and operational suppression are not implemented in this step."
+BOUNDARY = "Saving or reviewing a plan does not activate it. An administrator must explicitly activate an independently approved future revision. " + SCOPE
 
 
 class WindowCreate(BaseModel):
@@ -83,7 +85,8 @@ def create_maintenance_window_router(asset_for, idempotent, finish):
     def describe(db, row):
         revision = db.get(MaintenanceWindowRevision, (row.id, row.version))
         if revision is None: raise HTTPException(409, "Draft history is inconsistent. Ask an administrator to check it.")
-        return {"id": row.id, "asset_id": row.asset_id, "state": "draft", "active": False, **revision_json(revision)}
+        current = state(db, row.id, now())
+        return {"id": row.id, "asset_id": row.asset_id, "state": "draft" if current == "inactive" else current, "active": current == "suppressing", "locked": locked(db, row.id), **revision_json(revision)}
 
     def save_revision(db, user, asset, row, body):
         db.add(MaintenanceWindowRevision(draft_id=row.id, version=row.version, name=body.name, starts_at=body.starts_at,
@@ -131,6 +134,7 @@ def create_maintenance_window_router(asset_for, idempotent, finish):
         key, digest, receipt = idempotent(db, request, user, body.model_dump())
         if receipt is not None: return receipt
         if row.version != body.expected_version: raise HTTPException(409, "This window draft changed. Reload it before saving.")
+        if locked(db, row.id): raise HTTPException(409, "An activated plan is immutable. Cancel its window if needed and create a separate plan for a new interval.")
         row.version += 1; save_revision(db, user, asset, row, body)
         return complete(db, key, digest, row)
 
@@ -150,7 +154,7 @@ def create_maintenance_window_router(asset_for, idempotent, finish):
         return {"draft_version": row.version, "review_version": latest.version if latest else 0,
             "current_decision": latest.state if latest and latest.draft_version == row.version else None,
             "last_review": review_json(latest) if latest else None, "saved_revision": revision_json(saved),
-            "can_review": user.role == "admin" and saved.actor_id != user.id, "boundary": BOUNDARY}
+            "can_review": user.role == "admin" and saved.actor_id != user.id and not locked(db, row.id), "locked": locked(db, row.id), "boundary": BOUNDARY}
 
     @router.get("/drafts/{draft_id}/reviews")
     def reviews(draft_id: str, before_version: int | None = Query(default=None, ge=1), user: User = Depends(current_user), db: Session = Depends(get_db)):
@@ -175,6 +179,7 @@ def create_maintenance_window_router(asset_for, idempotent, finish):
         status = review_status(db, user, row)
         if row.version != body.expected_draft_version or status["review_version"] != body.expected_review_version:
             raise HTTPException(409, "The saved window or its review changed. Reload both before reviewing.")
+        if locked(db, row.id): raise HTTPException(409, "The activated revision and its planning decision are immutable. Use window cancellation instead.")
         if not status["can_review"]:
             raise HTTPException(403, "A different administrator must review the author’s saved revision.")
         db.add(MaintenanceWindowReview(draft_id=row.id, version=status["review_version"] + 1, draft_version=row.version,

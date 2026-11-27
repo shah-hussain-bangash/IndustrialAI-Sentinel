@@ -581,6 +581,40 @@ class MaintenanceWindowReview(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class MaintenanceWindowControl(Base):
+    __tablename__ = "maintenance_window_controls"
+    __table_args__ = (
+        ForeignKeyConstraint(["draft_id", "draft_version"], ["maintenance_window_revisions.draft_id", "maintenance_window_revisions.version"]),
+        ForeignKeyConstraint(["draft_id", "review_version"], ["maintenance_window_reviews.draft_id", "maintenance_window_reviews.version"]),
+        CheckConstraint("(version = 1 AND action = 'activate') OR (version = 2 AND action = 'cancel')", name="ck_window_control_action"),
+    )
+    draft_id: Mapped[str] = mapped_column(ForeignKey("maintenance_window_drafts.id"), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    draft_version: Mapped[int] = mapped_column(Integer)
+    review_version: Mapped[int] = mapped_column(Integer)
+    action: Mapped[str] = mapped_column(String(20))
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    actor_name: Mapped[str] = mapped_column(String(200))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
+class MaintenanceWindowSuppression(Base):
+    __tablename__ = "maintenance_window_suppressions"
+    __table_args__ = (
+        ForeignKeyConstraint(["draft_id", "control_version"], ["maintenance_window_controls.draft_id", "maintenance_window_controls.version"]),
+        ForeignKeyConstraint(["rule_id", "rule_version"], ["condition_rule_revisions.rule_id", "condition_rule_revisions.version"]),
+        CheckConstraint("control_version = 1", name="ck_window_suppression_activation"),
+    )
+    rule_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    reading_id: Mapped[str] = mapped_column(ForeignKey("readings.id"), primary_key=True)
+    rule_version: Mapped[int] = mapped_column(Integer)
+    draft_id: Mapped[str] = mapped_column(String(36), index=True)
+    control_version: Mapped[int] = mapped_column(Integer, default=1)
+    observed_at: Mapped[float] = mapped_column(Float)
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
