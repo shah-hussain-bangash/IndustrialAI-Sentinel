@@ -42,8 +42,8 @@ export const developmentPhases: DevelopmentPhase[] = [
   {
     id: "conditions", name: "Condition management", status: "local", route: "conditions",
     scope: "Turn sustained signals into traceable review and investigation work.",
-    delivered: ["Rule previews, immutable saved revisions, controlled activation, persistence, hysteresis and quality/gap handling are implemented.", "Match reviews, ownership history, trigger evidence, linked investigations and investigation-status filters are available.", "The header attention panel checks unreviewed rule matches and opens exact, bookmarkable match-review records within permitted site access.", "Permission-scoped JSON and printable condition-review downloads include saved evidence and explicitly bounded review/ownership history."],
-    remaining: ["Implement approved alert-delivery routing, retries, escalation and maintenance suppression.", "Validate thresholds and detection-to-review behavior with engineers using real operating cases."],
+    delivered: ["Rule previews, immutable saved revisions, controlled activation, persistence, hysteresis and quality/gap handling are implemented.", "Match reviews, ownership history, trigger evidence, linked investigations and investigation-status filters are available.", "The header attention panel checks unreviewed rule matches and opens exact, bookmarkable match-review records within permitted site access.", "Permission-scoped JSON and printable condition-review downloads include saved evidence and explicitly bounded review/ownership history.", "Inactive maintenance-window drafts preserve proposed equipment downtime and immutable revision history."],
+    remaining: ["Implement approved alert-delivery routing, retries, escalation, controlled window activation and operational maintenance suppression.", "Validate thresholds and detection-to-review behavior with engineers using real operating cases."],
     verification: "Synthetic trigger, paused match, review history and linked-draft flows have been exercised.",
     gate: "Accepted condition behavior, review ownership and notification/suppression cases.",
   },

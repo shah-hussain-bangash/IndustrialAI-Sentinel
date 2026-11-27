@@ -542,6 +542,29 @@ class ConditionMatchInvestigation(Base):
     created: Mapped[float] = mapped_column(Float, default=now)
 
 
+class MaintenanceWindowDraft(Base):
+    __tablename__ = "maintenance_window_drafts"
+    __table_args__ = (CheckConstraint("version >= 1", name="ck_window_draft_version"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    asset_id: Mapped[str] = mapped_column(ForeignKey("assets.id"), index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
+class MaintenanceWindowRevision(Base):
+    __tablename__ = "maintenance_window_revisions"
+    __table_args__ = (CheckConstraint("version >= 1 AND starts_at >= 0 AND ends_at > starts_at AND ends_at - starts_at <= 604800", name="ck_window_revision_range"),)
+    draft_id: Mapped[str] = mapped_column(ForeignKey("maintenance_window_drafts.id"), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(120))
+    starts_at: Mapped[float] = mapped_column(Float)
+    ends_at: Mapped[float] = mapped_column(Float)
+    reason: Mapped[str] = mapped_column(String(1000))
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    actor_name: Mapped[str] = mapped_column(String(200))
+    created: Mapped[float] = mapped_column(Float, default=now)
+
+
 class Preference(Base):
     __tablename__ = "preferences"
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)

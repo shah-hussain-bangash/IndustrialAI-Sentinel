@@ -12,7 +12,7 @@ def test_step2_upgrade_preserves_all_existing_rows(tmp_path):
     with sqlite3.connect(path) as db:
         for table,rows in before.items():assert db.execute(f'SELECT * FROM "{table}" ORDER BY 1').fetchall()==rows
         assert db.execute("SELECT count(*) FROM sensor_events").fetchone()[0]==0
-        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0016"
+        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0]=="0017"
         assert not db.execute("PRAGMA foreign_key_check").fetchall()
     run(env,"-m","alembic","check")
 

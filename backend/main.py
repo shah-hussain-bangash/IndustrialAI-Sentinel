@@ -60,6 +60,7 @@ from .live_rules import create_live_rule_router, process_snapshot
 from .rule_reviews import create_rule_review_router, create_rule_inbox_router
 from .rule_assignments import create_rule_assignment_router
 from .match_investigations import create_match_investigation_router
+from .maintenance_windows import create_maintenance_window_router
 
 
 @asynccontextmanager
@@ -93,6 +94,8 @@ async def lifespan(app):
         raise RuntimeError("Condition review ownership upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     if existing.has_table("assets") and not existing.has_table("condition_match_investigations"):
         raise RuntimeError("Condition investigation link upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
+    if existing.has_table("assets") and not all(existing.has_table(t) for t in ("maintenance_window_drafts", "maintenance_window_revisions")):
+        raise RuntimeError("Maintenance-window draft upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
     initialize()
     if not inspect(engine).has_table("account_links"):
         raise RuntimeError("Account email upgrade required. Stop Sentinel and run scripts/upgrade_database.py.")
@@ -1469,6 +1472,7 @@ app.include_router(create_rule_review_router(asset_for, idempotent, finish))
 app.include_router(create_rule_inbox_router())
 app.include_router(create_rule_assignment_router(asset_for, idempotent, finish))
 app.include_router(create_match_investigation_router(asset_for, idempotent, finish, inv_json, latest))
+app.include_router(create_maintenance_window_router(asset_for, idempotent, finish))
 
 DIST = Path(__file__).resolve().parents[1] / "dist"
 if DIST.exists():
