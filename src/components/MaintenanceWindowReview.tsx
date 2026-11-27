@@ -59,7 +59,7 @@ export function MaintenanceWindowReview({ draftId, version, dirty, onBusy }: {
     {loading && <p role="status">Loading planning review…</p>}
     {error && <p className="form-error" role="alert">{error}</p>}{message && <p role="status">{message}</p>}
     <Button type="button" disabled={busy || loading} onClick={() => void reload()}>Reload planning review</Button>
-    {data && <><div className="local-note"><strong>Saved revision {data.draft_version}: {data.saved_revision.name}</strong>
+    {data && <><div className="local-note" style={{ display: "block" }}><strong>Saved revision {data.draft_version}: {data.saved_revision.name}</strong>
       <p>{stamp(data.saved_revision.starts_at)} to {stamp(data.saved_revision.ends_at)}</p>
       <p>Author: {data.saved_revision.actor_name} · Saved {stamp(data.saved_revision.created)}</p><p>{data.saved_revision.reason}</p>
       <strong>Current revision: {data.current_decision ? `${data.current_decision} for planning only` : "Awaiting planning review"}</strong>
